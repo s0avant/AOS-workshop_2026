@@ -4,25 +4,26 @@
 #------------------------------------------------------------------------------#
 rm(list = ls())
 library(tidyverse)
+library(glue)
 library(auk)
 
 #------------------------------------------------------------------------------#
 # Read in data ----
 #------------------------------------------------------------------------------#
+# Define filepath for EBD file
+path <- "/Volumes/Eco Data/eBird_EBD_2026.05.05/ebd_US_smp_relMar-2026"
 
-
-# Import eBird data ----
-
-species <- "pnbfin1"
+# Define species of interest
+species <- "amewoo"
 species_name <- ebird_species(species, type = "scientific")
 
-# checklist data
-f_sed <- glue("data-raw/ebd_CO_{species}_smp_relAug-2025_sampling.txt")
-checklists_all <- read_sampling(f_sed)
+# Get checklist data
+f_samp <- glue("{path}/ebd_US_relMar-2026_sampling.txt")
+checklists_all <- read_sampling(f_samp)
 glimpse(checklists_all)
 
-# observation data
-f_ebd <- glue("data-raw/ebd_CO_{species}_smp_relAug-2025.txt")
+# Observation data
+f_ebd <- glue("{path}/ebd_US_smp_relMar-2026.txt")
 observations_all <- read_ebd(f_ebd)
 glimpse(observations_all)
 
@@ -30,24 +31,24 @@ glimpse(observations_all)
 # you're unsure about any of the variables, consult the metadata document that
 # came with the data download ("eBird_Basic_Dataset_Metadata_v1.15.pdf").
 
-
-# ├ Shared checklists ----
-
-# import checklist data without collapsing shared checklists
+#------------------------------------------------------------------------------#
+# Shared checklists ----
+#------------------------------------------------------------------------------#
+# Import checklist data without collapsing shared checklists
 checklists_shared <- read_sampling(f_sed, unique = FALSE)
-# identify shared checklists
+# Identify shared checklists
 checklists_shared |>
   filter(!is.na(group_identifier)) |>
   arrange(group_identifier) |>
   select(sampling_event_identifier, group_identifier)
-# collapse shared checklists
+# Collapse shared checklists
 checklists_unique <- auk_unique(checklists_shared, checklists_only = TRUE)
 nrow(checklists_shared)
 nrow(checklists_unique)
 
-
-# ├ Taxonomic rollup ----
-
+#------------------------------------------------------------------------------#
+# Taxonomic rollup ----
+#------------------------------------------------------------------------------#
 # import one of the auk example datasets without rolling up taxonomy
 obs_ex <- system.file("extdata/ebd-rollup-ex.txt", package = "auk") |>
   read_ebd(rollup = FALSE)
