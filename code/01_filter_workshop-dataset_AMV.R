@@ -1,6 +1,8 @@
 #------------------------------------------------------------------------------#
-#                           auk Filtering Workflow                             #
+#         auk Filtering Workflow: Subset Dataset for AOS 2026 Workshop         #
 #                      Aimee M. Van Tatenhove 05/05/2026                       #
+#            ---------------------------------------------------------         #
+#       Start here for workshop; 00_filter_full-dataset_AMV.R already run      #
 #------------------------------------------------------------------------------#
 rm(list = ls())
 library(tidyverse)
@@ -10,47 +12,118 @@ library(auk)
 # Read in data ----
 #------------------------------------------------------------------------------#
 # Define filepath for EBD file
-# path <- "/Volumes/Eco Data/eBird_EBD_2026.05.05/ebd_US_smp_relMar-2026" # Mac
-path <- "D:/eBird_EBD_2026.05.05/ebd_US_smp_relMar-2026/" # Windows
+## Example only; modify filepath to access YOUR folder containing EBD data
+path <- "/Volumes/Eco Data/eBird_EBD_2026.05.05/ebd_US_smp_relMar-2026/" # Mac example
+# path <- "D:/eBird_EBD_2026.05.05/ebd_US_smp_relMar-2026/" # Windows example
 
-# IF ON WINDOWS, NEED TO INSTALL CYGWIN TO GET AWK (AKA GAWK)
+# IF ON WINDOWS, MUST INSTALL CYGWIN TO GET AWK (AKA GAWK)
 # https://www.cygwin.com/install.html
 
+# Set paths for EBD & effort data in
+in_ebd <- paste0(path, "ebd_filtered_AOS_2026.txt")
+in_eff <- paste0(path, "eff_filtered_AOS_2026.txt")
+
+# Set paths for EBD & effort data out
+out_ebd <- paste0(path, "ebd_filtered_AOS_2026_amewoo.txt")
+out_eff <- paste0(path, "eff_filtered_AOS_2026_amewoo.txt")
+
+#------------------------------------------------------------------------------#
+# Set and execute filters ----
+#------------------------------------------------------------------------------#
 # Define species of interest
-species <- c("amewoo", "bkcchi", "prawar")
+species <- "amewoo"
 species_names <- ebird_species(species, type = "common")
 
-# Set path for checklist data in
-in_samp <- paste0(path, "ebd_US_relMar-2026_sampling.txt")
-
-# Set path for observation data in
-in_ebd <- paste0(path, "ebd_US_relMar-2026.txt")
-
-# Set path for observation data out
-out_ebd <- paste0(path, "ebd_filtered_AOS_2026.txt")
-
 # Define regions of interest
-states <- c("US-CT", "US-MA", "US-ME", "US-NH", "US-RI", "US-VT")
-
-a <- Sys.time() # Start timer
-
-# Call AWK to filter data
-amwo_data <- in_ebd |> # Set object name and read in EBD object
-  auk_ebd() |> # Reference EBD dataset 
-  auk_species(species = species_names) |> # Set species of interest
-  auk_state(state = states) |> # Set spatial region of interest
-  auk_filter(file = out_ebd, overwrite = TRUE) |> # Execute filters
-  read_ebd() # Execute direct read of EBD
-
-runtime <- Sys.time() - a # End timer and save duration
+states <- "US-MA"
 
 
 
 
+## For checklist data only (presence-only data)
+filters_presence <- 
+  # Set EBD file path
+  auk_ebd(in_ebd) |>
+  # Set species of interest
+  auk_species(species = species_names) |>
+  # Set spatial region of interest
+  auk_state(state = states)
+
+## For checklist AND sampling data (presence-absence data)
+filters_zerofill <-
+  # Set EBD & sampling file paths
+  auk_ebd(in_ebd, file_sampling = in_eff) |>
+  # Set species of interest
+  auk_species(species = species_names) |>
+  # Set spatial region of interest
+  auk_state(state = states)
+
+# # Call AWK to filter presence-only data
+a1 <- Sys.time() # Start timer; may take multiple hours
+presence_out <-
+  # Set EBD file path
+  auk_ebd(in_ebd) |>
+  # Execute filters
+  auk_filter(filters_presence,
+             file = out_ebd,
+             overwrite = TRUE) |>                                               ### REMOVE OVERWRITE?
+  # Read filtered data into R environment
+  read_ebd()
+(runtime1 <- Sys.time() - a1) # End timer and save duration
+
+# # Call AWK to filter presence-absence data
+a2 <- Sys.time() # Start timer; may take multiple hours
+presabs_out <- 
+  # Set EBD & sampling file paths
+  auk_ebd(in_ebd, file_sampling = in_eff) |>
+  # Execute filters
+  auk_filter(filters_presence,
+             file = out_ebd,
+             file_sampling = out_eff,
+             overwrite = TRUE) |>                                               ### REMOVE OVERWRITE?
+  # Read filtered data into R environment
+  read_ebd()
+(runtime2 <- Sys.time() - a2) # End timer and save duration
+
+#------------------------------------------------------------------------------#
+# Additional filters ----
+#------------------------------------------------------------------------------#
+amewoo_MA_2012 <- presence_out |> auk_ebd() |>
+  # Species: common and scientific names can be mixed
+  auk_species(species = species_names) |>
+  auk_state(state = "US-MA") |>
+  # Date: use standard ISO date format `"YYYY-MM-DD"`
+  auk_date(date = c("2012-01-01", "2012-12-31")) |>
+  # Time: 24h format
+  auk_time(start_time = c("06:00", "09:00")) |>
+  # Duration: length in minutes of checklists
+  auk_duration(duration = c(0, 60)) |>
+  # Complete: all species seen or heard are recorded
+  auk_complete() |>
+  # Execute filters
+  auk_filter(file = "presence-test.txt") |>
+  # Read filtered data into R environment
+  read_ebd()
 
 
 
 
+# Other options
+# Any of the following filters can be applied:
+# auk_species(): filter by species using common or scientific names.
+# auk_country(): filter by country using the standard English names or ISO 2-letter country codes.
+# auk_state(): filter by state using the eBird state codes, see ?ebird_states.
+# auk_bcr(): filter by Bird Conservation Region (BCR) using BCR codes, see ?bcr_codes.
+# auk_bbox(): filter by spatial bounding box, i.e. a range of latitudes and longitudes in decimal degrees. Formatted as `c(lng_min, lat_min, lng_max, lat_max)`
+# auk_date(): filter to checklists from a range of dates. To extract observations from a range of dates, regardless of year, use the wildcard “*” in place of the year, e.g. date = c("*-05-01", "*-06-30") for observations from May and June of any year.
+# auk_last_edited(): filter to checklists from a range of last edited dates, useful for extracting just new or recently edited data.
+# auk_protocol(): filter to checklists that following a specific search protocol, either stationary, traveling, or casual.
+# auk_project(): filter to checklists collected as part of a specific project (e.g. a breeding bird survey).
+# auk_time(): filter to checklists started during a range of times-of-day.
+# auk_duration(): filter to checklists with observation durations within a given range.
+# auk_distance(): filter to checklists with distances travelled within a given range.
+# auk_breeding(): only retain observations that have an associate breeding bird atlas code.
+# auk_complete(): only retain checklists in which the observer has specified that they recorded all species seen or heard. It is necessary to retain only complete records for the creation of presence-absence data, because the “absence” information is inferred by the lack of reporting of a species on checklists.
 
 
 
