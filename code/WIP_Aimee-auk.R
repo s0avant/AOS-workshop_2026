@@ -4,18 +4,74 @@
 #------------------------------------------------------------------------------#
 rm(list = ls())
 library(tidyverse)
-library(glue)
 library(auk)
 
 #------------------------------------------------------------------------------#
 # Read in data ----
 #------------------------------------------------------------------------------#
 # Define filepath for EBD file
-path <- "/Volumes/Eco Data/eBird_EBD_2026.05.05/ebd_US_smp_relMar-2026"
+# path <- "/Volumes/Eco Data/eBird_EBD_2026.05.05/ebd_US_smp_relMar-2026" # Mac
+path <- "D:/eBird_EBD_2026.05.05/ebd_US_smp_relMar-2026/" # Windows
+
+# IF ON WINDOWS, NEED TO INSTALL CYGWIN TO GET AWK (AKA GAWK)
+# https://www.cygwin.com/install.html
 
 # Define species of interest
-species <- "amewoo"
-species_name <- ebird_species(species, type = "scientific")
+species <- c("amewoo", "bkcchi", "prawar")
+species_names <- ebird_species(species, type = "common")
+
+# Set path for checklist data in
+in_samp <- paste0(path, "ebd_US_relMar-2026_sampling.txt")
+
+# Set path for observation data in
+in_ebd <- paste0(path, "ebd_US_relMar-2026.txt")
+
+# Set path for observation data out
+out_ebd <- paste0(path, "ebd_filtered_AOS_2026.txt")
+
+# Define regions of interest
+states <- c("US-CT", "US-MA", "US-ME", "US-NH", "US-RI", "US-VT")
+
+a <- Sys.time() # Start timer
+
+# Call AWK to filter data
+amwo_data <- in_ebd |> # Set object name and read in EBD object
+  auk_ebd() |> # Reference EBD dataset 
+  auk_species(species = species_names) |> # Set species of interest
+  auk_state(state = states) |> # Set spatial region of interest
+  auk_filter(file = out_ebd, overwrite = TRUE) |> # Execute filters
+  read_ebd() # Execute direct read of EBD
+
+runtime <- Sys.time() - a # End timer and save duration
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Get checklist data
 f_samp <- glue("{path}/ebd_US_relMar-2026_sampling.txt")
