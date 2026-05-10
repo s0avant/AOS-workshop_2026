@@ -13,8 +13,8 @@ library(auk)
 #------------------------------------------------------------------------------#
 # Define filepath for EBD file
 ## Example only; modify filepath to access YOUR folder containing EBD data
-path <- "/Volumes/Eco Data/eBird_EBD_2026.05.05/ebd_US_smp_relMar-2026/" # Mac example
-# path <- "D:/eBird_EBD_2026.05.05/ebd_US_smp_relMar-2026/" # Windows example
+# path <- "/Volumes/Eco Data/eBird_EBD_2026.05.05/ebd_US_smp_relMar-2026/" # Mac example
+path <- "D:/eBird_EBD_2026.05.05/ebd_US_smp_relMar-2026/" # Windows example
 
 # IF ON WINDOWS, MUST INSTALL CYGWIN TO GET AWK (AKA GAWK)
 # https://www.cygwin.com/install.html
@@ -37,9 +37,6 @@ species_names <- ebird_species(species, type = "common")
 # Define regions of interest
 states <- "US-MA"
 
-
-
-
 ## For checklist data only (presence-only data)
 filters_presence <- 
   # Set EBD file path
@@ -56,15 +53,14 @@ filters_zerofill <-
   # Set species of interest
   auk_species(species = species_names) |>
   # Set spatial region of interest
-  auk_state(state = states)
+  auk_state(state = states) |>
+  # Keep only complete checklists
+  auk_complete()
 
 # # Call AWK to filter presence-only data
 a1 <- Sys.time() # Start timer; may take multiple hours
-presence_out <-
-  # Set EBD file path
-  auk_ebd(in_ebd) |>
   # Execute filters
-  auk_filter(filters_presence,
+presence_out <- auk_filter(filters_presence,
              file = out_ebd,
              overwrite = TRUE) |>                                               ### REMOVE OVERWRITE?
   # Read filtered data into R environment
@@ -73,11 +69,8 @@ presence_out <-
 
 # # Call AWK to filter presence-absence data
 a2 <- Sys.time() # Start timer; may take multiple hours
-presabs_out <- 
-  # Set EBD & sampling file paths
-  auk_ebd(in_ebd, file_sampling = in_eff) |>
   # Execute filters
-  auk_filter(filters_presence,
+presabs_out <- auk_filter(filters_zerofill,
              file = out_ebd,
              file_sampling = out_eff,
              overwrite = TRUE) |>                                               ### REMOVE OVERWRITE?

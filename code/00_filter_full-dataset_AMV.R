@@ -14,8 +14,8 @@ library(auk)
 #------------------------------------------------------------------------------#
 # Define filepath for EBD file
 ## Example only; modify filepath to access YOUR folder containing EBD data
-path <- "/Volumes/Eco Data/eBird_EBD_2026.05.05/ebd_US_smp_relMar-2026/" # Mac
-# path <- "D:/eBird_EBD_2026.05.05/ebd_US_smp_relMar-2026/" # Windows
+# path <- "/Volumes/Eco Data/eBird_EBD_2026.05.05/ebd_US_smp_relMar-2026/" # Mac
+path <- "D:/eBird_EBD_2026.05.05/ebd_US_smp_relMar-2026/" # Windows
 
 # IF ON WINDOWS, MUST INSTALL CYGWIN TO GET AWK (AKA GAWK)
 # https://www.cygwin.com/install.html
@@ -55,27 +55,28 @@ filters_zerofill_1st <-
   # Set species of interest
   auk_species(species = species_names) |>
   # Set spatial region of interest
-  auk_state(state = states)
+  auk_state(state = states) |>
+  # Keep only complete checklists
+  auk_complete()
 
 # Call AWK to filter presence-only data
 a1 <- Sys.time() # Start timer; may take multiple hours
 
-presence_out <-
-  # Set EBD file path
-  auk_ebd(in_ebd) |>
-  # Execute filters
-  auk_filter()
+# Execute filters
+presence_out <- auk_filter(filters_presence_1st,
+                           file = out_ebd,
+                           overwrite = TRUE)
 
 (runtime1 <- Sys.time() - a1) # End timer and save duration
 
 # Call AWK to filter presence-absence data
 a2 <- Sys.time() # Start timer; may take multiple hours
 
-presabs_out <- 
-  # Set EBD & sampling file paths
-  auk_ebd(in_ebd, file_sampling = in_eff) |>
-  # Execute filters
-  auk_filter()
+# Execute filters
+presabs_out <- auk_filter(filters_zerofill_1st,
+                          file = out_ebd,
+                          file_sampling = out_eff,
+                          overwrite = TRUE)
 
 (runtime2 <- Sys.time() - a2) # End timer and save duration
 
