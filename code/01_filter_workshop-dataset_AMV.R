@@ -7,25 +7,21 @@
 rm(list = ls())
 library(tidyverse)
 library(auk)
+library(sf)
 
 #------------------------------------------------------------------------------#
 # Read in data ----
 #------------------------------------------------------------------------------#
-# Define filepath for EBD file
-## Example only; modify filepath to access YOUR folder containing EBD data
-# path <- "/Volumes/Eco Data/eBird_EBD_2026.05.05/ebd_US_smp_relMar-2026/" # Mac example
-path <- "D:/eBird_EBD_2026.05.05/ebd_US_smp_relMar-2026/" # Windows example
-
 # IF ON WINDOWS, MUST INSTALL CYGWIN TO GET AWK (AKA GAWK)
 # https://www.cygwin.com/install.html
 
 # Set paths for EBD & effort data in
-in_ebd <- paste0(path, "ebd_filtered_AOS_2026.txt")
-in_eff <- paste0(path, "eff_filtered_AOS_2026.txt")
+in_ebd <- "data/ebd_filtered_AOS_2026.txt"
+in_eff <- "data/eff_filtered_AOS_2026.txt"
 
-# Set paths for EBD & effort data out
-out_ebd <- paste0(path, "ebd_filtered_AOS_2026_amewoo.txt")
-out_eff <- paste0(path, "eff_filtered_AOS_2026_amewoo.txt")
+# Set paths for EBD & effort data out to local directory
+out_ebd <- "data/ebd_filtered_AOS_2026_amewoo.txt"
+out_eff <- "data/eff_filtered_AOS_2026_amewoo.txt"
 
 #------------------------------------------------------------------------------#
 # Set and execute filters ----
@@ -34,78 +30,68 @@ out_eff <- paste0(path, "eff_filtered_AOS_2026_amewoo.txt")
 species <- "amewoo"
 species_names <- ebird_species(species, type = "common")
 
-# Define regions of interest
-states <- "US-MA"
+# ## For checklist data only (presence-only data)
 
-## For checklist data only (presence-only data)
-filters_presence <- 
-  # Set EBD file path
-  auk_ebd(in_ebd) |>
-  # Set species of interest
-  auk_species(species = species_names) |>
-  # Set spatial region of interest
-  auk_state(state = states)
 
 ## For checklist AND sampling data (presence-absence data)
 filters_zerofill <-
   # Set EBD & sampling file paths
   auk_ebd(in_ebd, file_sampling = in_eff) |>
-  # Set species of interest
-  auk_species(species = species_names) |>
-  # Set spatial region of interest
-  auk_state(state = states) |>
-  # Keep only complete checklists
-  auk_complete()
-
-# # Call AWK to filter presence-only data
-a1 <- Sys.time() # Start timer; may take multiple hours
-  # Execute filters
-presence_out <- auk_filter(filters_presence,
-             file = out_ebd,
-             overwrite = TRUE) |>                                               ### REMOVE OVERWRITE?
-  # Read filtered data into R environment
-  read_ebd()
-(runtime1 <- Sys.time() - a1) # End timer and save duration
-
-# # Call AWK to filter presence-absence data
-a2 <- Sys.time() # Start timer; may take multiple hours
-  # Execute filters
-presabs_out <- auk_filter(filters_zerofill,
-             file = out_ebd,
-             file_sampling = out_eff,
-             overwrite = TRUE) |>                                               ### REMOVE OVERWRITE?
-  # Read filtered data into R environment
-  read_ebd()
-(runtime2 <- Sys.time() - a2) # End timer and save duration
-
-#------------------------------------------------------------------------------#
-# Additional filters ----
-#------------------------------------------------------------------------------#
-amewoo_MA_2012 <- presence_out |> auk_ebd() |>
   # Species: common and scientific names can be mixed
   auk_species(species = species_names) |>
+  # State: two-part 4-6 character codes
+  ## (2-letter ISO country code & 1-3 character state code). E.g., "US-NY"
   auk_state(state = "US-MA") |>
   # Date: use standard ISO date format `"YYYY-MM-DD"`
   auk_date(date = c("2012-01-01", "2012-12-31")) |>
   # Time: 24h format
-  auk_time(start_time = c("06:00", "09:00")) |>
+  auk_time(start_time = c("18:00", "22:00")) |>
   # Duration: length in minutes of checklists
-  auk_duration(duration = c(0, 60)) |>
+  auk_duration(duration = c(10, 60)) |>
   # Complete: all species seen or heard are recorded
-  auk_complete() |>
-  # Execute filters
-  auk_filter(file = "presence-test.txt") |>
+  auk_complete()
+
+# ## Call AWK to filter presence-only data
+# # Execute filters
+# presence_out <- auk_filter(filters_presence,
+#                            file = out_ebd,
+#                            overwrite = TRUE) |>
+#   # Read filtered data into R environment
+#   read_ebd()
+
+# Call AWK to filter presence-absence data
+a2 <- Sys.time() # Start timer
+# Execute filters
+presabs_out <- auk_filter(filters_zerofill,
+                          file = out_ebd,
+                          file_sampling = out_eff,
+                          overwrite = TRUE) |>
   # Read filtered data into R environment
   read_ebd()
+Sys.time() - a2 # End timer
+
+
+
+presabs_out |> view()
+
+
+
+
+
+
+
+
+# EXERCISE: Take some time to explore the variables in these datasets. If
+# you're unsure about any of the variables, consult the metadata document that
+# came with the data download ("eBird_Basic_Dataset_Metadata_v1.15.pdf").
+
 
 
 
 
 # Other options
 # Any of the following filters can be applied:
-# auk_species(): filter by species using common or scientific names.
 # auk_country(): filter by country using the standard English names or ISO 2-letter country codes.
-# auk_state(): filter by state using the eBird state codes, see ?ebird_states.
 # auk_bcr(): filter by Bird Conservation Region (BCR) using BCR codes, see ?bcr_codes.
 # auk_bbox(): filter by spatial bounding box, i.e. a range of latitudes and longitudes in decimal degrees. Formatted as `c(lng_min, lat_min, lng_max, lat_max)`
 # auk_date(): filter to checklists from a range of dates. To extract observations from a range of dates, regardless of year, use the wildcard “*” in place of the year, e.g. date = c("*-05-01", "*-06-30") for observations from May and June of any year.
@@ -113,10 +99,139 @@ amewoo_MA_2012 <- presence_out |> auk_ebd() |>
 # auk_protocol(): filter to checklists that following a specific search protocol, either stationary, traveling, or casual.
 # auk_project(): filter to checklists collected as part of a specific project (e.g. a breeding bird survey).
 # auk_time(): filter to checklists started during a range of times-of-day.
-# auk_duration(): filter to checklists with observation durations within a given range.
 # auk_distance(): filter to checklists with distances travelled within a given range.
 # auk_breeding(): only retain observations that have an associate breeding bird atlas code.
-# auk_complete(): only retain checklists in which the observer has specified that they recorded all species seen or heard. It is necessary to retain only complete records for the creation of presence-absence data, because the “absence” information is inferred by the lack of reporting of a species on checklists.
+
+
+
+
+
+# Zerofill checklists
+presabs_zf <-
+  auk_zerofill(out_ebd,
+               out_eff,
+               collapse = TRUE) # Combine into single data frame
+
+
+
+
+
+
+
+
+# transform effort variables
+# 1. convert counts to integer and "X" to NA
+# 2. set distance to 0 for stationary checklists
+# 3. convert duration to hours
+# 4. create speed variable
+# 5. convert time to hours since midnight
+# 6. split date into year and day of year
+zf_effort <- presabs_zf |>
+  mutate(
+    # Convert count to integer and X to NA (ignore NA warning!)
+    observation_count = as.integer(observation_count),
+    # effort_distance_km to 0 for stationary counts
+    effort_distance_km = if_else(observation_type == "Stationary",
+                                 0, effort_distance_km),
+    # convert duration to hours
+    effort_hours = duration_minutes / 60,
+    # speed km/h
+    effort_speed_kmph = effort_distance_km / effort_hours,
+    # split date into year and day of year
+    year = year(observation_date),
+    day_of_year = yday(observation_date)
+  )
+
+
+
+
+
+# Apply effort filters ----
+
+# traveling or stationary counts with fewer than 10 observers
+# duration <= 8 h and >= 2 minutes, length <= 10 km, speed <= 100km/h
+zf_filtered <- zf_effort |>
+  filter(observation_type %in% c("Stationary", "Traveling"),
+         !is.na(effort_hours), effort_hours >= 0.032, effort_hours <= 8,
+         !is.na(effort_distance_km), effort_distance_km <= 10,
+         effort_speed_kmph <= 100,
+         number_observers <= 10)
+
+# EXERCISE: Pick one of the four effort variables we filtered on above and
+# explore how much variation remains.
+ggplot(zf_effort) +
+  aes(x = effort_hours) +
+  geom_histogram(binwidth = 0.5,
+                 aes(y = after_stat(count / sum(count)))) +
+  scale_y_continuous(limits = c(0, NA), labels = scales::label_percent()) +
+  labs(x = "Duration [hours]",
+       y = "% of eBird checklists",
+       title = "Distribution of eBird checklist duration",
+       subtitle = "Before effort filtering")
+ggplot(zf_filtered) +
+  aes(x = effort_hours) +
+  geom_histogram(binwidth = 0.5,
+                 aes(y = after_stat(count / sum(count)))) +
+  scale_y_continuous(limits = c(0, NA), labels = scales::label_percent()) +
+  labs(x = "Duration [hours]",
+       y = "% of eBird checklists",
+       title = "Distribution of eBird checklist duration",
+       subtitle = "After effort filtering")
+
+
+
+
+
+# Spatialize
+zf_sf <- zf_filtered |>
+  st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
+
+# Plot results, colored by species presence & absence
+ggplot(zf_sf) +
+  geom_sf(aes(color = species_observed))
+
+
+# Mapping ----
+
+# load gis data
+land <- read_sf("data/gis-data.gpkg", "land") |>
+  st_geometry()
+country_lines <- read_sf("data/gis-data.gpkg", "country_lines") |>
+  st_geometry()
+region_boundary <- read_sf("data/gis-data.gpkg", "region") |>
+  st_geometry()
+
+# prepare ebird data for mapping
+checklists_sf <- checklists |>
+  # convert to spatial points
+  st_as_sf(coords = c("longitude", "latitude"), crs = 4326) |>
+  select(species_observed)
+
+# map
+par(mar = c(0.25, 0.25, 4, 0.25))
+# set up plot area
+plot(st_geometry(checklists_sf),
+     main = glue("{species_name} eBird observations\n 2015-2024"),
+     col = NA, border = NA)
+# contextual gis data
+plot(land, col = "#cfcfcf", border = "#888888", lwd = 0.5, add = TRUE)
+plot(region_boundary, col = "#e6e6e6", border = NA, add = TRUE)
+plot(country_lines, col = "#ffffff", lwd = 1.5, add = TRUE)
+# ebird observations
+# not observed
+plot(filter(checklists_sf, !species_observed),
+     pch = 19, cex = 0.05, col = alpha("#555555", 0.1),
+     add = TRUE)
+# observed
+plot(filter(checklists_sf, species_observed),
+     pch = 19, cex = 0.15, col = alpha("#4daf4a", 0.5),
+     add = TRUE)
+# legend
+legend("topleft", bty = "n",
+       col = c("#555555", "#4daf4a"),
+       legend = c("eBird checklist", "Detections"),
+       pch = 19)
+box()
 
 
 
@@ -133,25 +248,6 @@ amewoo_MA_2012 <- presence_out |> auk_ebd() |>
 
 
 
-
-
-
-
-
-
-# Get checklist data
-f_samp <- glue("{path}/ebd_US_relMar-2026_sampling.txt")
-checklists_all <- read_sampling(f_samp)
-glimpse(checklists_all)
-
-# Observation data
-f_ebd <- glue("{path}/ebd_US_smp_relMar-2026.txt")
-observations_all <- read_ebd(f_ebd)
-glimpse(observations_all)
-
-# EXERCISE: Take some time to explore the variables in these datasets. If
-# you're unsure about any of the variables, consult the metadata document that
-# came with the data download ("eBird_Basic_Dataset_Metadata_v1.15.pdf").
 
 #------------------------------------------------------------------------------#
 # Shared checklists ----
@@ -303,47 +399,7 @@ checklists <- zf_filtered |>
 write_csv(checklists, glue("data/checklists-zf_{species}_co.csv"), na = "")
 
 
-# Mapping ----
 
-# load gis data
-land <- read_sf("data/gis-data.gpkg", "land") |>
-  st_geometry()
-country_lines <- read_sf("data/gis-data.gpkg", "country_lines") |>
-  st_geometry()
-region_boundary <- read_sf("data/gis-data.gpkg", "region") |>
-  st_geometry()
-
-# prepare ebird data for mapping
-checklists_sf <- checklists |>
-  # convert to spatial points
-  st_as_sf(coords = c("longitude", "latitude"), crs = 4326) |>
-  select(species_observed)
-
-# map
-par(mar = c(0.25, 0.25, 4, 0.25))
-# set up plot area
-plot(st_geometry(checklists_sf),
-     main = glue("{species_name} eBird observations\n 2015-2024"),
-     col = NA, border = NA)
-# contextual gis data
-plot(land, col = "#cfcfcf", border = "#888888", lwd = 0.5, add = TRUE)
-plot(region_boundary, col = "#e6e6e6", border = NA, add = TRUE)
-plot(country_lines, col = "#ffffff", lwd = 1.5, add = TRUE)
-# ebird observations
-# not observed
-plot(filter(checklists_sf, !species_observed),
-     pch = 19, cex = 0.05, col = alpha("#555555", 0.1),
-     add = TRUE)
-# observed
-plot(filter(checklists_sf, species_observed),
-     pch = 19, cex = 0.15, col = alpha("#4daf4a", 0.5),
-     add = TRUE)
-# legend
-legend("topleft", bty = "n",
-       col = c("#555555", "#4daf4a"),
-       legend = c("eBird checklist", "Detections"),
-       pch = 19)
-box()
 
 
 # Environmental variables ----

@@ -24,9 +24,9 @@ path <- "D:/eBird_EBD_2026.05.05/ebd_US_smp_relMar-2026/" # Windows
 in_ebd <- paste0(path, "ebd_US_relMar-2026.txt")
 in_eff <- paste0(path, "ebd_US_relMar-2026_sampling.txt")
 
-# Set paths for EBD & effort data out
-out_ebd <- paste0(path, "ebd_filtered_AOS_2026.txt")
-out_eff <- paste0(path, "eff_filtered_AOS_2026.txt")
+# Set paths for EBD & effort data out to local directory
+out_ebd <- "data/ebd_filtered_AOS_2026.txt"
+out_eff <- "data/eff_filtered_AOS_2026.txt"
 
 #------------------------------------------------------------------------------#
 # Set and execute filters ----
