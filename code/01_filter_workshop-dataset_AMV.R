@@ -1,6 +1,6 @@
 #------------------------------------------------------------------------------#
 #         auk Filtering Workflow: Subset Dataset for AOS 2026 Workshop         #
-#                      Aimee M. Van Tatenhove 05/05/2026                       #
+#                      Aimee M. Van Tatenhove 05/21/2026                       #
 #            ---------------------------------------------------------         #
 #       Start here for workshop; 00_filter_full-dataset_AMV.R already run      #
 #------------------------------------------------------------------------------#
@@ -10,33 +10,53 @@ library(auk)
 library(sf)
 
 #------------------------------------------------------------------------------#
-# Read in data ----
+# Set data paths ----
 #------------------------------------------------------------------------------#
 # IF ON WINDOWS, MUST INSTALL CYGWIN TO GET AWK (AKA GAWK)
 # https://www.cygwin.com/install.html
 
 # Set paths for EBD & effort data in
 in_ebd <- "data/ebd_filtered_AOS_2026.txt"
-in_eff <- "data/eff_filtered_AOS_2026.txt"
+in_sampling <- "data/ebd_filtered_AOS_2026_sampling.txt"
 
 # Set paths for EBD & effort data out to local directory
 out_ebd <- "data/ebd_filtered_AOS_2026_amewoo.txt"
-out_eff <- "data/eff_filtered_AOS_2026_amewoo.txt"
+out_sampling <- "data/ebd_filtered_AOS_2026_sampling_amewoo.txt"
 
 #------------------------------------------------------------------------------#
-# Set and execute filters ----
+# Explore small example datasets ----
+#------------------------------------------------------------------------------#
+# Takes ~25 seconds to read in
+ebd_small <- read_ebd("data/ebd_example-small.txt")
+
+# Takes ~3 seconds to read in
+sampling_small <- read_sampling("data/ebd_example-small_sampling.txt")
+
+## EXERCISE #1: ----
+# Take some time to explore the variables in these datasets. If you're unsure
+# about any of the variables, consult the metadata document that we've provided
+# ("eBird_Basic_Dataset_Metadata_v1.15.pdf")
+
+glimpse(ebd_small)
+glimpse(sampling_small)
+
+summary(ebd_small)
+summary(sampling_small)
+
+#------------------------------------------------------------------------------#
+# Set and execute filters on full (large) datasets ----
 #------------------------------------------------------------------------------#
 # Define species of interest
 species <- "amewoo"
 species_names <- ebird_species(species, type = "common")
 
 # ## For checklist data only (presence-only data)
-
+# <<ADD CODE HERE>>
 
 ## For checklist AND sampling data (presence-absence data)
 filters_zerofill <-
   # Set EBD & sampling file paths
-  auk_ebd(in_ebd, file_sampling = in_eff) |>
+  auk_ebd(in_ebd, file_sampling = in_sampling) |>
   # Species: common and scientific names can be mixed
   auk_species(species = species_names) |>
   # State: two-part 4-6 character codes
@@ -59,12 +79,12 @@ filters_zerofill <-
 #   # Read filtered data into R environment
 #   read_ebd()
 
-# Call AWK to filter presence-absence data
+# Call AWK to filter presence-absence data (takes ~XXX minutes to filter)
 a2 <- Sys.time() # Start timer
 # Execute filters
 presabs_out <- auk_filter(filters_zerofill,
                           file = out_ebd,
-                          file_sampling = out_eff,
+                          file_sampling = out_sampling,
                           overwrite = TRUE) |>
   # Read filtered data into R environment
   read_ebd()
@@ -72,45 +92,20 @@ Sys.time() - a2 # End timer
 
 
 
-presabs_out |> view()
 
 
 
 
 
 
-
-
-# EXERCISE: Take some time to explore the variables in these datasets. If
-# you're unsure about any of the variables, consult the metadata document that
-# came with the data download ("eBird_Basic_Dataset_Metadata_v1.15.pdf").
-
-
-
-
-
-# Other options
-# Any of the following filters can be applied:
-# auk_country(): filter by country using the standard English names or ISO 2-letter country codes.
-# auk_bcr(): filter by Bird Conservation Region (BCR) using BCR codes, see ?bcr_codes.
-# auk_bbox(): filter by spatial bounding box, i.e. a range of latitudes and longitudes in decimal degrees. Formatted as `c(lng_min, lat_min, lng_max, lat_max)`
-# auk_date(): filter to checklists from a range of dates. To extract observations from a range of dates, regardless of year, use the wildcard “*” in place of the year, e.g. date = c("*-05-01", "*-06-30") for observations from May and June of any year.
-# auk_last_edited(): filter to checklists from a range of last edited dates, useful for extracting just new or recently edited data.
-# auk_protocol(): filter to checklists that following a specific search protocol, either stationary, traveling, or casual.
-# auk_project(): filter to checklists collected as part of a specific project (e.g. a breeding bird survey).
-# auk_time(): filter to checklists started during a range of times-of-day.
-# auk_distance(): filter to checklists with distances travelled within a given range.
-# auk_breeding(): only retain observations that have an associate breeding bird atlas code.
-
-
-
-
-
-# Zerofill checklists
+#------------------------------------------------------------------------------#
+# Zerofill checklists ----
+#------------------------------------------------------------------------------#
+# We are interested in presence and absence data because...
 presabs_zf <-
   auk_zerofill(out_ebd,
-               out_eff,
-               collapse = TRUE) # Combine into single data frame
+               out_sampling,
+               collapse = TRUE) # "collapse" combines both into one data frame
 
 
 
@@ -126,7 +121,7 @@ presabs_zf <-
 # 4. create speed variable
 # 5. convert time to hours since midnight
 # 6. split date into year and day of year
-zf_effort <- presabs_zf |>
+zf_samplingort <- presabs_zf |>
   mutate(
     # Convert count to integer and X to NA (ignore NA warning!)
     observation_count = as.integer(observation_count),
@@ -150,7 +145,7 @@ zf_effort <- presabs_zf |>
 
 # traveling or stationary counts with fewer than 10 observers
 # duration <= 8 h and >= 2 minutes, length <= 10 km, speed <= 100km/h
-zf_filtered <- zf_effort |>
+zf_filtered <- zf_samplingort |>
   filter(observation_type %in% c("Stationary", "Traveling"),
          !is.na(effort_hours), effort_hours >= 0.032, effort_hours <= 8,
          !is.na(effort_distance_km), effort_distance_km <= 10,
@@ -159,7 +154,7 @@ zf_filtered <- zf_effort |>
 
 # EXERCISE: Pick one of the four effort variables we filtered on above and
 # explore how much variation remains.
-ggplot(zf_effort) +
+ggplot(zf_samplingort) +
   aes(x = effort_hours) +
   geom_histogram(binwidth = 0.5,
                  aes(y = after_stat(count / sum(count)))) +
@@ -189,6 +184,27 @@ zf_sf <- zf_filtered |>
 # Plot results, colored by species presence & absence
 ggplot(zf_sf) +
   geom_sf(aes(color = species_observed))
+
+
+#------------------------------------------------------------------------------#
+# EXERCISE #2: Change filters to suit your interests <<REWORD>>
+#------------------------------------------------------------------------------#
+
+
+# Other options
+# Any of the following filters can be applied:
+# auk_country(): filter by country using the standard English names or ISO 2-letter country codes.
+# auk_bcr(): filter by Bird Conservation Region (BCR) using BCR codes, see ?bcr_codes.
+# auk_bbox(): filter by spatial bounding box, i.e. a range of latitudes and longitudes in decimal degrees. Formatted as `c(lng_min, lat_min, lng_max, lat_max)`
+# auk_date(): filter to checklists from a range of dates. To extract observations from a range of dates, regardless of year, use the wildcard “*” in place of the year, e.g. date = c("*-05-01", "*-06-30") for observations from May and June of any year.
+# auk_last_edited(): filter to checklists from a range of last edited dates, useful for extracting just new or recently edited data.
+# auk_protocol(): filter to checklists that following a specific search protocol, either stationary, traveling, or casual.
+# auk_project(): filter to checklists collected as part of a specific project (e.g. a breeding bird survey).
+# auk_time(): filter to checklists started during a range of times-of-day.
+# auk_distance(): filter to checklists with distances traveled within a given range.
+# auk_breeding(): only retain observations that have an associate breeding bird atlas code.
+# auk_year()
+
 
 
 # Mapping ----

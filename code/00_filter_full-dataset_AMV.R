@@ -26,7 +26,7 @@ in_eff <- paste0(path, "ebd_US_relMar-2026_sampling.txt")
 
 # Set paths for EBD & effort data out to local directory
 out_ebd <- "data/ebd_filtered_AOS_2026.txt"
-out_eff <- "data/eff_filtered_AOS_2026.txt"
+out_eff <- "data/ebd_filtered_AOS_2026_sampling.txt"
 
 #------------------------------------------------------------------------------#
 # Set and execute filters ----
@@ -38,6 +38,9 @@ species_names <- ebird_species(species, type = "common")
 # Define regions of interest
 states <- c("US-CT", "US-MA", "US-ME", "US-NH", "US-RI", "US-VT")
 
+# Define years of interest
+years <- 2012:2025
+
 # Set data filters
 ## For checklist data only (presence-only data)
 filters_presence_1st <- 
@@ -46,7 +49,9 @@ filters_presence_1st <-
   # Set species of interest
   auk_species(species = species_names) |>
   # Set spatial region of interest
-  auk_state(state = states)
+  auk_state(state = states) |>
+  # Set study period of interest
+  auk_year(year = years)
 
 ## For checklist AND sampling data (presence-absence data)
 filters_zerofill_1st <-
@@ -56,6 +61,8 @@ filters_zerofill_1st <-
   auk_species(species = species_names) |>
   # Set spatial region of interest
   auk_state(state = states) |>
+  # Set study period of interest
+  auk_year(year = years) |>
   # Keep only complete checklists
   auk_complete()
 
