@@ -1,60 +1,163 @@
 #------------------------------------------------------------------------------#
 #         auk Filtering Workflow: Subset Dataset for AOS 2026 Workshop         #
-#                      Aimee M. Van Tatenhove 05/21/2026                       #
-#            ---------------------------------------------------------         #
-#       Start here for workshop; 00_filter_full-dataset_AMV.R already run      #
+#                      Aimee M. Van Tatenhove 06/10/2026                       #
 #------------------------------------------------------------------------------#
 rm(list = ls())
 library(tidyverse)
 library(auk)
 library(sf)
+source("code/custom-functions.R")
+set_theme(custom.theme())
 
-#------------------------------------------------------------------------------#
-# Set data paths ----
-#------------------------------------------------------------------------------#
-# IF ON WINDOWS, MUST INSTALL CYGWIN TO GET AWK (AKA GAWK)
+# IF ON WINDOWS, MUST INSTALL CYGWIN TO GET AWK (a.k.a. GAWK)
 # https://www.cygwin.com/install.html
-
-# Set paths for EBD & effort data in
-in_ebd <- "data/ebd_filtered_AOS_2026.txt"
-in_sampling <- "data/ebd_filtered_AOS_2026_sampling.txt"
-
-# Set paths for EBD & effort data out to local directory
-out_ebd <- "data/ebd_filtered_AOS_2026_amewoo.txt"
-out_sampling <- "data/ebd_filtered_AOS_2026_sampling_amewoo.txt"
 
 #------------------------------------------------------------------------------#
 # Explore small example datasets ----
 #------------------------------------------------------------------------------#
-# Takes ~25 seconds to read in
-ebd_small <- read_ebd("data/ebd_example-small.txt")
+# Load EBD and sampling files
+## Set paths for EBD & effort data in
+in_ebd_small <- "data/ebd_example-small.txt"
+in_sampling_small <- "data/sampling_example-small.txt"
 
-# Takes ~3 seconds to read in
-sampling_small <- read_sampling("data/ebd_example-small_sampling.txt")
+## Smallish files, so we can load into R memory directly
+get.filesize(in_ebd_small)
+get.filesize(in_sampling_small)
 
-## EXERCISE #1: ----
-# Take some time to explore the variables in these datasets. If you're unsure
-# about any of the variables, consult the metadata document that we've provided
-# ("eBird_Basic_Dataset_Metadata_v1.15.pdf")
+## Read in files
+ebd_small <- read_ebd(in_ebd_small) # Takes ~25 seconds
+sampling_small <- read_sampling(in_sampling_small) # Takes ~3 seconds
 
+# Explore variables in these datasets
 glimpse(ebd_small)
 glimpse(sampling_small)
 
 summary(ebd_small)
 summary(sampling_small)
 
+unique(ebd_small$common_name)
+mean(sampling_small$effort_distance_km, na.rm = TRUE)
+
+## EXERCISE #1: (5 minutes) ----
+# Explore other variables in these datasets. How do the two datasets differ?
+# If you're unsure about any of the variables, consult the metadata document:
+# ("eBird_Basic_Dataset_Metadata_v1.15.pdf")     ### NOTE: We will need to provide this
+
+
+# Even "small" datasets are quite large! Let's visualize some variables
+## Observations dataset
+ggplot(ebd_small) +
+  geom_bar(aes(x = state)) +
+  ggtitle("Observations by US State") +
+  xlab("US state") + ylab("Count")
+
+ggplot(ebd_small) +
+  geom_bar(aes(x = state, color = common_name, fill = common_name)) +
+  ggtitle("Observations by US State and Species") +
+  xlab("US state") + ylab("Count") +
+  labs(color = "Species",
+       fill = "Species") 
+
+ggplot(ebd_small) +
+  geom_bar(aes(x = observation_date, color = common_name, fill = common_name)) +
+  ggtitle("Observation Date by Species") +
+  xlab("Checklist date") + ylab("Count") +
+  labs(color = "Species",
+       fill = "Species")
+
+## Sampling dataset
+ggplot(sampling_small) +
+  geom_bar(aes(x = observation_type)) +
+  ggtitle("Observation Type") +
+  xlab("Type") + ylab("Count")
+
+ggplot(sampling_small) + # You can safely ignore the plotting error here
+  geom_bar(aes(x = duration_minutes)) +
+  ggtitle("Checklist Duration") +
+  xlab("Duration in minutes") + ylab("Count")
+
+## EXERCISE #2: (10 minutes) ----
+# Visualize a variable of interest that we haven't explored yet
+
+
+# Pipes come in two flavors: base "|>" and magrittr (tidyverse) "%>%"
+# We will use base pipes today
+## No pipes (stepwise)
+tmp1 <- subset(sampling_small, !is.na(duration_minutes))
+tmp1 <- transform(tmp1, duration_hours = duration_minutes / 60)
+duration_hours <- tmp1$duration_hours
+duration_max_no_pipe <- max(duration_hours)
+
+duration_max_no_pipe
+
+## With base R pipe
+duration_max_pipe <- sampling_small |>
+  subset(!is.na(duration_minutes)) |>
+  transform(duration_hours = duration_minutes / 60) |>
+  _$duration_hours |> # "_" passes object to next line of code
+  max()
+
+duration_max_pipe
+
+## EXERCISE #3: (10 minutes) Pipes ----
+# Practice manipulating example datasets using base R pipe
+
+
 #------------------------------------------------------------------------------#
 # Set and execute filters on full (large) datasets ----
 #------------------------------------------------------------------------------#
-# Define species of interest
+# Set paths for raw EBD & effort data in
+## Large files, so we DON'T want to read these directly into R memory
+in_ebd <- "data/ebd_filtered_AOS_2026.txt"
+in_sampling <- "data/sampling_filtered_AOS_2026.txt"
+
+get.filesize(in_ebd)
+get.filesize(in_sampling)
+
+# Define auk filters for checklist data
+## For simplicity, ignore effort data for now (presence-only data)
+filters1 <-
+  # Set EBD file path
+  auk_ebd(in_ebd) |>
+  # Species: common and scientific names can be mixed
+  auk_species(species = "American Woodcock") 
+
+filters1
+
+## Can also define filters outside of pipeline; useful for complicated filters
 species <- "amewoo"
 species_names <- ebird_species(species, type = "common")
+species_names
 
-# ## For checklist data only (presence-only data)
-# <<ADD CODE HERE>>
+filters2 <-
+  # Set EBD file path
+  auk_ebd(in_ebd) |>
+  # Species: common and scientific names can be mixed
+  auk_species(species = species_names) 
 
-## For checklist AND sampling data (presence-absence data)
-filters_zerofill <-
+filters2 # Should look identical to filters1
+
+# Apply filters to EBD object
+## Call AWK to execute filters; takes ~30 seconds
+presence_out <- auk_filter(filters2,
+                           file = "data/ebd_filtered_amewoo_presence.txt",
+                           overwrite = TRUE) |>
+  # Read filtered data into R environment
+  read_ebd()
+
+# Explore variables in filtered dataset
+glimpse(presence_out)
+
+ggplot(presence_out) +
+  geom_bar(aes(x = state, color = common_name, fill = common_name)) +
+  ggtitle("Observations by US State and Species") +
+  xlab("US state") + ylab("Count") +
+  labs(color = "Species",
+       fill = "Species") 
+
+# Define auk filters for checklist AND sampling data (presence-absence data)
+## More complicated filters
+filters_zerofill1 <-
   # Set EBD & sampling file paths
   auk_ebd(in_ebd, file_sampling = in_sampling) |>
   # Species: common and scientific names can be mixed
@@ -64,51 +167,88 @@ filters_zerofill <-
   auk_state(state = "US-MA") |>
   # Date: use standard ISO date format `"YYYY-MM-DD"`
   auk_date(date = c("2012-01-01", "2012-12-31")) |>
-  # Time: 24h format
+  # Time: 24h format with beginning and end times
   auk_time(start_time = c("18:00", "22:00")) |>
   # Duration: length in minutes of checklists
   auk_duration(duration = c(10, 60)) |>
-  # Complete: all species seen or heard are recorded
+  # Complete: all species seen or heard are recorded (important!)
   auk_complete()
 
-# ## Call AWK to filter presence-only data
-# # Execute filters
-# presence_out <- auk_filter(filters_presence,
-#                            file = out_ebd,
-#                            overwrite = TRUE) |>
-#   # Read filtered data into R environment
-#   read_ebd()
+# Apply filters to EBD & effort objects
+## Note: We can also define output file names outside of pipeline
+out_ebd <- "data/ebd_filtered_amewoo_presabs.txt"
+out_sampling <- "data/sampling_filtered_amewoo_presabs.txt"
 
-# Call AWK to filter presence-absence data (takes ~XXX minutes to filter)
-a2 <- Sys.time() # Start timer
-# Execute filters
-presabs_out <- auk_filter(filters_zerofill,
+## Call AWK to execute filters; takes ~65 seconds
+presabs_out <- auk_filter(filters_zerofill1,
                           file = out_ebd,
                           file_sampling = out_sampling,
                           overwrite = TRUE) |>
   # Read filtered data into R environment
   read_ebd()
-Sys.time() - a2 # End timer
+
+glimpse(presabs_out) # EBD and effort datasets are now single object
+
+# Compare file sizes between unfiltered & filtered datasets
+## GB = KB x 1,048,576
+get.filesize(in_ebd) # Original
+get.filesize(out_ebd) # Filtered; much smaller!
+get.filesize(in_sampling) # Original
+get.filesize(out_sampling) # Filtered; much smaller!
+
+## EXERCISE #4: (15 minutes) Apply your own filters on EBD & effort objects ----
+# We will use these files for remainder of workshop. What are you interested in exploring?
+# Any of the following filters can be applied:
+# auk_country(): filter by country using the standard English names or ISO 2-letter country codes.
+# auk_bcr(): filter by Bird Conservation Region (BCR) using BCR codes, see ?bcr_codes.
+# auk_bbox(): filter by spatial bounding box, i.e. a range of latitudes and longitudes in decimal degrees. Formatted as "c(lng_min, lat_min, lng_max, lat_max)"
+# auk_date(): filter to checklists from a range of dates. To extract observations from a range of dates, regardless of year, use the wildcard “*” in place of the year, e.g. date = c("*-05-01", "*-06-30") for observations from May and June of any year.
+# auk_last_edited(): filter to checklists from a range of last edited dates, useful for extracting just new or recently edited data.
+# auk_protocol(): filter to checklists that following a specific search protocol, either stationary, traveling, or casual.
+# auk_project(): filter to checklists collected as part of a specific project (e.g. a breeding bird survey).
+# auk_time(): filter to checklists started during a range of times-of-day.
+# auk_distance(): filter to checklists with distances traveled within a given range.
+# auk_breeding(): only retain observations that have an associate breeding bird atlas code.
+# auk_year()
+
+# auk_species(): filter to specific species; common and scientific names can be mixed
+# auk_state(): filter by state; uses two-part 4-6 character codes (2-letter ISO country code & 1-3 character state code). Formatted as "US-NY"
+# auk_date(): filter by date or date range. Formatted as "YYYY-MM-DD". Use "c("YYYY-MM-DD", "YYYY-MM-DD") for date range.
+## Time: 24h format with beginning and end times
+auk_time(start_time = c("18:00", "22:00"))
+## Duration: length in minutes of checklists
+auk_duration(duration = c(10, 60))
 
 
 
 
+# Define auk filters for checklist AND sampling data (presence-absence data)
 
+# Apply filters to EBD & effort objects
 
-
+# Explore variables in filtered dataset
 
 
 #------------------------------------------------------------------------------#
 # Zerofill checklists ----
 #------------------------------------------------------------------------------#
+# What is zero filling?
+
+
+# Set paths for raw EBD & effort data in and out
+in_ebd <- "data/ebd_filtered_amewoo_presabs.txt"
+in_sampling <- "data/sampling_filtered_amewoo_presabs.txt"
+
+
 # We are interested in presence and absence data because...
+
+# Execute zero-filtering function; takes < 2 minutes
 presabs_zf <-
-  auk_zerofill(out_ebd,
-               out_sampling,
+  auk_zerofill(in_ebd,
+               in_sampling,
                collapse = TRUE) # "collapse" combines both into one data frame
 
-
-
+glimpse(presabs_zf)
 
 
 
@@ -192,18 +332,7 @@ ggplot(zf_sf) +
 
 
 # Other options
-# Any of the following filters can be applied:
-# auk_country(): filter by country using the standard English names or ISO 2-letter country codes.
-# auk_bcr(): filter by Bird Conservation Region (BCR) using BCR codes, see ?bcr_codes.
-# auk_bbox(): filter by spatial bounding box, i.e. a range of latitudes and longitudes in decimal degrees. Formatted as `c(lng_min, lat_min, lng_max, lat_max)`
-# auk_date(): filter to checklists from a range of dates. To extract observations from a range of dates, regardless of year, use the wildcard “*” in place of the year, e.g. date = c("*-05-01", "*-06-30") for observations from May and June of any year.
-# auk_last_edited(): filter to checklists from a range of last edited dates, useful for extracting just new or recently edited data.
-# auk_protocol(): filter to checklists that following a specific search protocol, either stationary, traveling, or casual.
-# auk_project(): filter to checklists collected as part of a specific project (e.g. a breeding bird survey).
-# auk_time(): filter to checklists started during a range of times-of-day.
-# auk_distance(): filter to checklists with distances traveled within a given range.
-# auk_breeding(): only retain observations that have an associate breeding bird atlas code.
-# auk_year()
+
 
 
 
