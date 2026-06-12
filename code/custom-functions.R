@@ -12,10 +12,10 @@ custom.theme <- function(){
           legend.text = element_text(size = 14),
           legend.title = element_text(size = 16),
           update_geom_defaults("bar", list(alpha = 0.6,
-                                           color = viridisLite::viridis(1),
-                                           fill = viridisLite::viridis(1))),
-          palette.color.discrete = scales::pal_viridis(),
-          palette.fill.discrete = scales::pal_viridis())
+                                           color = viridisLite::plasma(1),
+                                           fill = viridisLite::plasma(1))),
+          palette.color.discrete = scales::pal_viridis(option = "plasma"),
+          palette.fill.discrete = scales::pal_viridis(option = "plasma"))
 }#function
 
 # Custom color palettes ----

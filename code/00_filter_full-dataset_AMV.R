@@ -1,12 +1,11 @@
 #------------------------------------------------------------------------------#
 #                     auk Filtering Workflow: Full Dataset                     #
-#                      Aimee M. Van Tatenhove 05/05/2026                       #
+#                      Aimee M. Van Tatenhove 06/11/2026                       #
 #            ---------------------------------------------------------         #
 #           This code has already been run, and produces the data that         #
-#                we will be using in the 2025 AOS auk workshop                 #
+#                we will be using in the 2026 AOS auk workshop                 #
 #------------------------------------------------------------------------------#
 rm(list = ls())
-library(tidyverse)
 library(auk)
 
 #------------------------------------------------------------------------------#
@@ -14,8 +13,8 @@ library(auk)
 #------------------------------------------------------------------------------#
 # Define filepath for EBD file
 ## Example only; modify filepath to access YOUR folder containing EBD data
-# path <- "/Volumes/Eco Data/eBird_EBD_2026.05.05/ebd_US_smp_relMar-2026/" # Mac
-path <- "D:/eBird_EBD_2026.05.05/ebd_US_smp_relMar-2026/" # Windows
+path <- "/Volumes/Eco Data/eBird_EBD_2026.05.05/ebd_US_smp_relMar-2026/" # Mac
+# path <- "D:/eBird_EBD_2026.05.05/ebd_US_smp_relMar-2026/" # Windows
 
 # IF ON WINDOWS, MUST INSTALL CYGWIN TO GET AWK (AKA GAWK)
 # https://www.cygwin.com/install.html
@@ -26,14 +25,14 @@ in_eff <- paste0(path, "ebd_US_relMar-2026_sampling.txt")
 
 # Set paths for EBD & effort data out to local directory
 out_ebd <- "data/ebd_filtered_AOS_2026.txt"
-out_eff <- "data/ebd_filtered_AOS_2026_sampling.txt"
+out_eff <- "data/effort_filtered_AOS_2026.txt"
 
 #------------------------------------------------------------------------------#
 # Set and execute filters ----
 #------------------------------------------------------------------------------#
 # Define species of interest
-species <- c("amewoo", "bkcchi", "prawar")
-species_names <- ebird_species(species, type = "common")
+species <- c("amewoo", "bkcchi", "prawar", "yerwar")
+(species_names <- ebird_species(species, type = "common"))
 
 # Define regions of interest
 states <- c("US-CT", "US-MA", "US-ME", "US-NH", "US-RI", "US-VT")
@@ -53,9 +52,9 @@ filters_presence_1st <-
   # Set study period of interest
   auk_year(year = years)
 
-## For checklist AND sampling data (presence-absence data)
+## For checklist AND effort data (presence-absence data)
 filters_zerofill_1st <-
-  # Set EBD & sampling file paths
+  # Set EBD & effort file paths
   auk_ebd(in_ebd, file_sampling = in_eff) |>
   # Set species of interest
   auk_species(species = species_names) |>
@@ -86,7 +85,3 @@ presabs_out <- auk_filter(filters_zerofill_1st,
                           overwrite = TRUE)
 
 (runtime2 <- Sys.time() - a2) # End timer and save duration
-
-#------------------------------------------------------------------------------#
-#                Next script: 01_filter_workshop-dataset_AMV.R                 #
-#------------------------------------------------------------------------------#
