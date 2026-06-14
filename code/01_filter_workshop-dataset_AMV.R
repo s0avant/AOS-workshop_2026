@@ -360,7 +360,7 @@ zf_sf <- zf_eff_filtered |>
   st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
 
 # Load GIS and shapefile data
-# nlcd_raster <- rast("data/gis/nlcd-northeast.tif")
+ee_landcover <- read.csv("data/gis/EarthEnv-landcover-northeast.csv")
 
 usa_sf <- read_sf("data/gis/usa-all-states.shp") |>
   st_transform(crs = 4326)
@@ -387,16 +387,15 @@ ggplot() +
   labs(color = "Species observed")
 
 ## Add landcover data
-# nlcd_df <- as.data.frame(nlcd_raster, xy = TRUE)
-
-# ggplot() +
-# geom_raster(data = nlcd_df, 
-#             aes(x = x, y = y,
-#                 fill = landcover)) + 
-#   geom_sf(data = ne_states_sf, fill = NA) +
-#   geom_sf(data = zf_clip_sf, aes(color = species_observed), alpha = 0.5) +
-#   scale_fill_gradientn(name = "Elevation", colors = terrain.colors(10)) + 
-#   coord_quickmap()
+ggplot() +
+geom_raster(data = ee_landcover,
+            aes(x = x, y = y,
+                fill = class_names)) +
+  geom_sf(data = ne_states_sf, color = "grey30", fill = NA) +
+  geom_sf(data = zf_clip_sf, aes(color = species_observed), alpha = 0.5) #+
+  # scale_fill_manual(breaks = 1:12,
+  #                   labels = landcover_palette$class_names,
+  #                   values = landcover_palette$colors)
 
 ## Exercise #6: (10 minutes) ----
 # Choose one of the other environmental variables and make a map. Does
