@@ -6,7 +6,6 @@ rm(list = ls())
 library(tidyverse)
 library(auk)
 library(cowplot)
-library(terra)
 library(sf)
 source("code/custom-functions.R")
 set_theme(custom.theme())
@@ -395,7 +394,7 @@ ggplot() +
   geom_sf(data = zf_clip_sf, aes(color = species_observed), alpha = 0.5) +
   scale_fill_manual(breaks = unique(ee_landcover$class_names),
                     values = unique(ee_landcover$colors)) +
-  labs(color = "Species presence",
+  labs(color = "Species observed",
        fill = "Landcover class")
 
 ## Exercise #6: (10 minutes) ----
