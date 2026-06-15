@@ -34,11 +34,7 @@ effort_small <- read_sampling(in_effort_small) # Takes ~3 seconds
 glimpse(ebd_small)
 glimpse(effort_small)
 
-summary(ebd_small)
-summary(effort_small)
-
 unique(ebd_small$common_name)
-mean(effort_small$effort_distance_km, na.rm = TRUE)
 
 ## EXERCISE #1: (5 minutes) ----
 # Explore other variables in these datasets. How do the two datasets differ?
@@ -94,6 +90,10 @@ ebd_small_norollup <- read_ebd(in_ebd_small, rollup = FALSE) # Takes ~25 seconds
 unique(ebd_small$category) # Original
 unique(ebd_small_norollup$category) # Not rolled up
 
+## Explore taxonomies
+unique(ebd_small_norollup$common_name)
+unique(ebd_small_norollup$subspecies_common_name)
+
 ## Rollup taxonomy
 ebd_small_rollup <- auk_rollup(ebd_small_norollup)
 
@@ -103,15 +103,15 @@ unique(ebd_small_rollup$category) # Rolled up
 
 ## Visualize species taxonomies
 plot_grid(
-  ggplot(ebd_small_norollup) +
-  geom_bar(aes(x = state, color = common_name, fill = common_name)) +
+  ggplot(ebd_small_norollup[ebd_small_norollup$common_name == "Yellow-rumped Warbler", ]) +
+    geom_bar(aes(x = state, color = subspecies_common_name, fill = subspecies_common_name)) +
     ggtitle("Observations by US State",
             subtitle = "Taxonomy before rollup") +
     xlab("US state") + ylab("Count") +
-  labs(color = "Species",
-       fill = "Species"),
+    labs(color = "Species",
+         fill = "Species"),
   
-  ggplot(ebd_small_rollup) +
+  ggplot(ebd_small_rollup[ebd_small_rollup$common_name == "Yellow-rumped Warbler", ]) +
     geom_bar(aes(x = state, color = common_name, fill = common_name)) +
     ggtitle("Observations by US State",
             subtitle = "Taxonomy after rollup") +
@@ -208,7 +208,7 @@ filters_zerofill1 <-
   ## (2-letter ISO country code & 1-3 character state code). E.g., "US-NY"
   auk_state(state = "US-MA") |>
   # Date: use standard ISO date format `"YYYY-MM-DD"`
-  auk_date(date = c("2012-01-01", "2012-12-31")) |>
+  auk_date(date = c("2025-01-01", "2025-12-31")) |>
   # Time: 24h format with beginning and end times
   auk_time(start_time = c("17:00", "23:00")) |>
   # Complete: all species seen or heard are recorded (important!)
@@ -259,8 +259,8 @@ get.filesize(out_effort) # Filtered; much smaller!
 filters_zerofill2 <-
   # Set EBD & effort file paths
   auk_ebd(in_ebd, file_sampling = in_effort)    ### FABI: do you think we should also include auk_complete() or let them remember they need to use it?
-  # Add other filters of interest below with |>
-  
+# Add other filters of interest below with |>
+
 ## Apply filters to EBD & effort objects
 
 ## Explore variables in filtered dataset
@@ -327,25 +327,25 @@ zf_eff_filtered <- zf_eff_transf |>
 # Visualize before and after effort standardization
 plot_grid(
   ggplot(zf_eff_transf) +
-  aes(x = effort_hours) +
-  geom_histogram(binwidth = 0.5,
-                 aes(y = after_stat(count / sum(count)))) +
-  scale_y_continuous(limits = c(0, NA), labels = scales::label_percent()) +
-  labs(x = "Duration (hours)",
-       y = "% of eBird checklists",
-       title = "Distribution of eBird checklist duration",
-       subtitle = "Before effort filtering"),
-
-ggplot(zf_eff_filtered) +
-  aes(x = effort_hours) +
-  geom_histogram(binwidth = 0.5,
-                 aes(y = after_stat(count / sum(count)))) +
-  scale_y_continuous(limits = c(0, NA), labels = scales::label_percent()) +
-  labs(x = "Duration (hours)",
-       y = "% of eBird checklists",
-       title = "Distribution of eBird checklist duration",
-       subtitle = "After effort filtering"),
-ncol = 2)
+    aes(x = effort_hours) +
+    geom_histogram(binwidth = 0.5,
+                   aes(y = after_stat(count / sum(count)))) +
+    scale_y_continuous(limits = c(0, NA), labels = scales::label_percent()) +
+    labs(x = "Duration (hours)",
+         y = "% of eBird checklists",
+         title = "Distribution of eBird checklist duration",
+         subtitle = "Before effort filtering"),
+  
+  ggplot(zf_eff_filtered) +
+    aes(x = effort_hours) +
+    geom_histogram(binwidth = 0.5,
+                   aes(y = after_stat(count / sum(count)))) +
+    scale_y_continuous(limits = c(0, NA), labels = scales::label_percent()) +
+    labs(x = "Duration (hours)",
+         y = "% of eBird checklists",
+         title = "Distribution of eBird checklist duration",
+         subtitle = "After effort filtering"),
+  ncol = 2)
 
 ## EXERCISE #5 (5 minutes) ----
 # Pick one of the other effort variables and explore remaining variation
@@ -360,7 +360,8 @@ zf_sf <- zf_eff_filtered |>
   st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
 
 # Load GIS and shapefile data
-ee_landcover <- read.csv("data/gis/EarthEnv-landcover-northeast.csv")
+ee_landcover <- read.csv("data/gis/EarthEnv-landcover-northeast.csv") |>
+  left_join(landcover_palette) # Add map colors for nice plotting
 
 usa_sf <- read_sf("data/gis/usa-all-states.shp") |>
   st_transform(crs = 4326)
@@ -374,32 +375,33 @@ ggplot() +
   geom_sf(data = ne_states_sf) +
   geom_sf(data = zf_sf, aes(color = species_observed), alpha = 0.5)
 
-# Clip checklists to land
+# Clip checklists to land; safe to ignore warning message
 zf_clip_sf <- st_intersection(zf_sf, ne_states_sf)
 
 ## Clipped map
 ggplot() +
   geom_sf(data = usa_sf) +
   geom_sf(data = zf_clip_sf, aes(color = species_observed), alpha = 0.5) +
-  coord_sf(xlim = c(-74, -67),
-           ylim = c(38, 47.5)) +
+  coord_sf(xlim = c(-74, -67), ylim = c(38, 47.5)) +
   ggtitle("eBird Observations by Checklist") +
   labs(color = "Species observed")
 
 ## Add landcover data
 ggplot() +
-geom_raster(data = ee_landcover,
-            aes(x = x, y = y,
-                fill = class_names)) +
+  geom_raster(data = ee_landcover,
+              aes(x = x, y = y,
+                  fill = class_names), alpha = 0.7) +
   geom_sf(data = ne_states_sf, color = "grey30", fill = NA) +
-  geom_sf(data = zf_clip_sf, aes(color = species_observed), alpha = 0.5) #+
-  # scale_fill_manual(breaks = 1:12,
-  #                   labels = landcover_palette$class_names,
-  #                   values = landcover_palette$colors)
+  geom_sf(data = zf_clip_sf, aes(color = species_observed), alpha = 0.5) +
+  scale_fill_manual(breaks = unique(ee_landcover$class_names),
+                    values = unique(ee_landcover$colors)) +
+  labs(color = "Species presence",
+       fill = "Landcover class")
 
 ## Exercise #6: (10 minutes) ----
 # Choose one of the other environmental variables and make a map. Does
 # the spatial pattern match what you know about the region? Hint: "zoom" your
-# map by setting "coord_sf(xlim = c(), ylim = c())" to a smaller range
+# map by setting "coord_sf(xlim = c(), ylim = c())" to a smaller range. Note
+# that longitude values must be negative!
 
 
