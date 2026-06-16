@@ -15,18 +15,18 @@ library(auk)
 library(tidyverse)
 
 tf <- tempfile()
-system.file("extdata/ebd-sample.txt", package = "auk") %>% 
-  auk_ebd() %>%
-  auk_species(species = c("Canada Jay", "Blue Jay")) %>%
-  auk_country(country = c("US", "Canada")) %>%
-  auk_bbox(bbox = c(-100, 37, -80, 52)) %>%
-  auk_date(date = c("2012-01-01", "2012-12-31")) %>%
-  auk_time(start_time = c("06:00", "09:00")) %>%
-  auk_duration(duration = c(0, 60)) %>%
-  auk_complete() %>% 
-  auk_filter(tf) %>% 
-  read_ebd() %>% 
-  pull(common_name) %>% 
+system.file("extdata/ebd-sample.txt", package = "auk") |> 
+  auk_ebd() |>
+  auk_species(species = c("Canada Jay", "Blue Jay")) |>
+  auk_country(country = c("US", "Canada")) |>
+  auk_bbox(bbox = c(-100, 37, -80, 52)) |>
+  auk_date(date = c("2012-01-01", "2012-12-31")) |>
+  auk_time(start_time = c("06:00", "09:00")) |>
+  auk_duration(duration = c(0, 60)) |>
+  auk_complete() |> 
+  auk_filter(tf) |> 
+  read_ebd() |> 
+  pull(common_name) |>
   message()
 unlink(tf)
 
