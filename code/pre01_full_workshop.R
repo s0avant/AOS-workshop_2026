@@ -5,16 +5,11 @@
 #------------------------------------------------------------------------------#
 rm(list = ls())
 
-library(cowplot)
-library(sf)
-source("code/custom-functions.R")
-set_theme(custom.theme())
-
 # !REMEMBER! IF ON WINDOWS, MUST INSTALL CYGWIN TO GET AWK (a.k.a. GAWK)
 # https://www.cygwin.com/install.html
 
 #------------------------------------------------------------------------------#
-# Script 01_import-and-explore-ebd-data----
+# Script 01: Import and explore ebd data----
 #------------------------------------------------------------------------------#
 library(tidyverse)
 library(auk)
@@ -97,13 +92,8 @@ library(tidyverse)
 library(auk)
 
 # Section 1:  Set paths for raw EBD & effort data in
-## If files were large we would not want to read these directly into R memory
 in_ebd <- "data/ebd_filtered_cam_AOS_2026.txt"
 in_effort <- "data/effort_filtered_cam_AOS_2026.txt"
-
-get.filesize(in_ebd)
-get.filesize(in_effort)
-
 
 # Section 2: Define auk filters for checklist data
 ?auk_ebd() #The first function of the filtering process is always this one! 
@@ -147,14 +137,20 @@ presence_out <- auk_filter(filters2,
 #------------------------------------------------------------------------------#
 library(tidyverse)
 library(auk)
+library(lubridate)
+library(cowplot)
+library(sf)
+source("code/custom-functions.R")
+set_theme(custom.theme())
 
 # Section 1: Set paths for a new dataset on birds of the United States
 in_ebd <- "data/ebd_filtered_us_AOS_2026.txt"
 in_effort <- "data/effort_filtered_us_AOS_2026.txt"
 
-# Section 2: Explore and define new auk filters for checklist AND effort data (presence-absence data)
+# Section 2: Explore and define new auk filters for checklist AND effort data 
+species_names=c("amewoo")
 
-filters_zerofill1 <-
+filters <-
   # Set EBD & effort file paths
   auk_ebd(in_ebd, file_sampling = in_effort) |>
   # Species: common and scientific names can be mixed
@@ -171,77 +167,30 @@ filters_zerofill1 <-
 
 # Apply filters to EBD & effort objects
 ## Note: We can also define output file names outside of pipeline
-out_ebd <- "data/ebd_filtered_amewoo_presabs.txt"
-out_effort <- "data/effort_filtered_amewoo_presabs.txt"
+f_ebd <- "data/ebd_filtered_amewoo_presabs.txt"
+f_effort <- "data/effort_filtered_amewoo_presabs.txt"
 
 ## Call AWK to execute filters
-presabs_out <- auk_filter(filters_zerofill1,
-                          file = out_ebd,
-                          file_sampling = out_effort,
+f_ebd_effort <- auk_filter(filters,
+                          file = f_ebd,
+                          file_sampling = f_effort,
                           overwrite = TRUE) |>
   # Read filtered data into R environment
   read_ebd()
 
-glimpse(presabs_out) # EBD and effort datasets are now single object
+glimpse(f_ebd_effort) # EBD and effort datasets are now single object filtered by sampling event which will allow us to have necessary information to generate a "presence-absence" data set
 
-## --- EXERCISE (15 minutes) ----
-# Apply your own filters to EBD & effort objects. We will use these files for the
-# remainder of workshop. What are you interested in exploring?
-# Any of the following filters can be applied:
-# auk_species(): filter by species using common or scientific names.
-# auk_country(): filter by country using the standard English names or ISO 2-letter country codes.
-# auk_state(): filter by state using eBird state codes, see ?ebird_states.
-# auk_bcr(): filter by Bird Conservation Region (BCR) using BCR codes, see ?bcr_codes.
-# auk_bbox(): filter by spatial bounding box, i.e. a range of latitudes and longitudes in decimal degrees.
-# auk_date(): filter to checklists from a range of dates. To extract observations from a range of dates, regardless of year, use the wildcard “*” in place of the year, e.g. date = c("*-05-01", "*-06-30") for observations from May and June of any year.
-# auk_last_edited(): filter to checklists from a range of last edited dates, useful for extracting just new or recently edited data.
-# auk_protocol(): filter to checklists that following a specific search protocol, either stationary, traveling, or casual.
-# auk_project(): filter to checklists collected as part of a specific project (e.g. a breeding bird survey).
-# auk_time(): filter to checklists started during a range of times-of-day.
-# auk_duration(): filter to checklists with observation durations within a given range.
-# auk_distance(): filter to checklists with distances traveled within a given range.
-# auk_breeding(): only retain observations that have an associate breeding bird atlas code.
-# auk_complete(): only retain checklists in which the observer has specified that they recorded all species seen or heard. It is necessary to retain only complete records for the creation of presence-absence data, because the “absence”” information is inferred by the lack of reporting of a species on checklists.
+# Section 3: Zerofill to generate a "presence-absence" data set
 
-## Define auk filters for checklist AND effort data (presence-absence data)
-filters_zerofill2 <-
-  # Set EBD & effort file paths
-  auk_ebd(in_ebd, file_sampling = in_effort)    ### FABI: do you think we should also include auk_complete() or let them remember they need to use it?
-# Add other filters of interest below with |>
-
-## Apply filters to EBD & effort objects
-
-## Explore variables in filtered dataset
-
-
-
-#------------------------------------------------------------------------------#
-# Zerofill checklists ----
-#------------------------------------------------------------------------------#
-# eBird observations tell us where a species is present, but we also need
-# information on where a species is absent to understand what habitats are
-# important, how ecological change affects species distributions, etc.
-# Zero filling uses complete eBird checklists that report no observations of a
-# species to generate species absence data at those checklist locations.
-
-# Set paths for raw EBD & effort data in and out
-## Remember, these contain both species presences and absences
-in_ebd <- "data/ebd_filtered_amewoo_presabs.txt"
-in_effort <- "data/effort_filtered_amewoo_presabs.txt"
-
-# Execute zero-filtering function
-## Run time varies depending on the filters you chose; should be < 2 minutes
-## "collapse = FALSE" produces two lists and is efficient for storage because
-## checklist information isn’t duplicated. "collapse = TRUE" produces a single
-## data frame that is easier to manipulate for analysis. We will collapse.
+## Execute zero-filtering function
 presabs_zf <-
-  auk_zerofill(in_ebd,
-               in_effort,
+  auk_zerofill(f_ebd_effort,
                collapse = TRUE)
 
-glimpse(presabs_zf)
+glimpse(presabs_zf$observations)
+glimpse(presabs_zf$sampling_events)
 
-# Transform effort variables for easier filtering & comprehension
+# Section 4: Transform effort variables for easier filtering & comprehension
 zf_eff_transf <- presabs_zf |>
   mutate(
     # Convert count to integer and X to NA (ignore NA warning!)
@@ -260,17 +209,16 @@ zf_eff_transf <- presabs_zf |>
   )
 
 # Apply effort filters
-## It's often a good idea to reduce detectability variation between checklists
-## by imposing constraints on the effort variables. You can think of this as
-## partially standardizing the observation process. Let's impose some filters:
-## Traveling or stationary counts with fewer than 10 observers
-## Duration <= 5 h and >= 10 minutes, length <= 10 km, speed <= 50km/h
 zf_eff_filtered <- zf_eff_transf |>
   filter(observation_type %in% c("Stationary", "Traveling"),
          !is.na(effort_hours), effort_hours >= 0.17, effort_hours <= 5,
          !is.na(effort_distance_km), effort_distance_km <= 10,
          effort_speed_kmph <= 50,
          number_observers <= 10)
+
+# Compare the filtered and transformed datasets
+table(zf_eff_transf$species_observed)
+table(zf_eff_filtered$species_observed)
 
 # Visualize before and after effort standardization
 plot_grid(
@@ -295,14 +243,8 @@ plot_grid(
          subtitle = "After effort filtering"),
   ncol = 2)
 
-## EXERCISE #5 (5 minutes) ----
-# Pick one of the other effort variables and explore remaining variation
 
-
-
-#------------------------------------------------------------------------------#
-# Maps ----
-#------------------------------------------------------------------------------#
+# Section 5: Extra- mapping observations
 # Spatialize zerofilled object
 zf_sf <- zf_eff_filtered |>
   st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
@@ -346,10 +288,36 @@ ggplot() +
   labs(color = "Species observed",
        fill = "Landcover class")
 
-## Exercise #6: (10 minutes) ----
-# Choose one of the other environmental variables and make a map. Does
-# the spatial pattern match what you know about the region? Hint: "zoom" your
-# map by setting "coord_sf(xlim = c(), ylim = c())" to a smaller range. Note
-# that longitude values must be negative!
 
+#------------------------------------------------------------------------------#
+# Script 04: Practical instructions----
+#------------------------------------------------------------------------------#
+
+# Apply your own filters to EBD & effort objects. We will use these files for the
+# remainder of workshop. What are you interested in exploring?
+# Any of the following filters can be applied:
+# auk_species(): filter by species using common or scientific names.
+# auk_country(): filter by country using the standard English names or ISO 2-letter country codes.
+# auk_state(): filter by state using eBird state codes, see ?ebird_states.
+# auk_bcr(): filter by Bird Conservation Region (BCR) using BCR codes, see ?bcr_codes.
+# auk_bbox(): filter by spatial bounding box, i.e. a range of latitudes and longitudes in decimal degrees.
+# auk_date(): filter to checklists from a range of dates. To extract observations from a range of dates, regardless of year, use the wildcard “*” in place of the year, e.g. date = c("*-05-01", "*-06-30") for observations from May and June of any year.
+# auk_last_edited(): filter to checklists from a range of last edited dates, useful for extracting just new or recently edited data.
+# auk_protocol(): filter to checklists that following a specific search protocol, either stationary, traveling, or casual.
+# auk_project(): filter to checklists collected as part of a specific project (e.g. a breeding bird survey).
+# auk_time(): filter to checklists started during a range of times-of-day.
+# auk_duration(): filter to checklists with observation durations within a given range.
+# auk_distance(): filter to checklists with distances traveled within a given range.
+# auk_breeding(): only retain observations that have an associate breeding bird atlas code.
+# auk_complete(): only retain checklists in which the observer has specified that they recorded all species seen or heard. It is necessary to retain only complete records for the creation of presence-absence data, because the “absence”” information is inferred by the lack of reporting of a species on checklists.
+
+## Define auk filters for checklist AND effort data (presence-absence data)
+filters_zerofill2 <-
+  # Set EBD & effort file paths
+  auk_ebd(in_ebd, file_sampling = in_effort)    ### FABI: do you think we should also include auk_complete() or let them remember they need to use it? A reminder is fine. There are exploration instances where if you dont need detections non detections, its ok ifyou are looking at all checlists but for exploration purposes.
+# Add other filters of interest below with |>
+
+## Apply filters to EBD & effort objects
+
+## Explore variables in filtered dataset
 

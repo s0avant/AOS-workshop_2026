@@ -8,7 +8,7 @@
 # 1. Mac Users move on to step 2, Windows users read the handout and download Cygwin
 
 # 2. Install the packages needed for the workshop
-install.packages(c("tidyverse","auk", "cowplot", "sf"))
+install.packages(c("tidyverse","auk", "cowplot", "sf", "lubridate"))
 
 # 3. Run this script: If you see a species name the auk has been installed and runs its functions adequately. We will get to what these are shortly.
 library(auk)
