@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------------#
 #                      auk Full Workflow:  AOS 2026 Workshop                   #
 #                      Aimee M. Van Tatenhove & Fabiola Rodríguez Vásquez      #
-#                                       06/16/2026.                            #
+#                                       06/17/2026.                            #
 #------------------------------------------------------------------------------#
 rm(list = ls())
 
@@ -13,15 +13,27 @@ rm(list = ls())
 #------------------------------------------------------------------------------#
 library(tidyverse)
 library(auk)
+source("code/custom-functions.R")
 
 # Section 1: Load EBD (eBird Basic Dataset) and effort (sampling) files
 ## Set paths for EBD & effort data in
-in_ebd <- "./data/ebd_filtered_cam_AOS_2026.txt"
-in_effort <- "./data/effort_filtered_cam_AOS_2026.txt"
+in_ebd_small <- "./data/ebd_filtered_cam_AOS_2026.txt"
+in_effort_small <- "./data/effort_filtered_cam_AOS_2026.txt"
 
-## Read in files
+## Smallish files, so we can load into R memory directly
+get.filesize(in_ebd_small)
+get.filesize(in_effort_small)
+
+## How do we read the files
+?read_ebd()
+
+## Apply read_ebd()
 ebd <- read_ebd(in_ebd) 
 effort <- read_sampling(in_effort) 
+
+## What are these files?
+nrow(ebd) # Data of observations of species 
+nrow(effort) # All sampling events
 
 # Section 2: Explore the dataset
 class(ebd)
@@ -30,7 +42,7 @@ glimpse(effort)
 unique(ebd$common_name)
 range(ebd$observation_date)
 
-## --Quick Exercise--
+## --Exercise--
 ## Using the appropriate function of those above or other determine how many countries appear in the ebd dataset?
 
 
@@ -39,6 +51,7 @@ table(ebd$country)
 table(ebd$common_name)
 
 ## Explore visually by using ggplot's geom_bar which counts occurrences for a category
+## Observations dataset
 ggplot(ebd) +
   geom_bar(aes(x = country)) +
   ggtitle("Observations by country") +
@@ -58,9 +71,16 @@ ggplot(ebd) +
   labs(color = "Species",
        fill = "Species")
 
-## -- Quick Exercise --
-## Plot the count of the different types of observation that are used to record birds. Hint: use the sampling set
+## Effort dataset
+ggplot(effort) +
+  geom_bar(aes(x = observation_type)) +
+  ggtitle("Observation Type") +
+  xlab("Type") + ylab("Count")
 
+ggplot(effort) + # You can safely ignore the plotting error here
+  geom_bar(aes(x = duration_minutes)) +
+  ggtitle("Checklist Duration") +
+  xlab("Duration in minutes") + ylab("Count")
 
 # Section 3: Pipes- the building block of the 'auk' workflow 
 ## Pipes come in two flavors: base "|>" and magrittr (tidyverse) "%>%"
@@ -90,16 +110,21 @@ duration_max_pipe
 #------------------------------------------------------------------------------#
 library(tidyverse)
 library(auk)
+source("code/custom-functions.R")
 
 # Section 1:  Set paths for raw EBD & effort data in
 in_ebd <- "data/ebd_filtered_cam_AOS_2026.txt"
-in_effort <- "data/effort_filtered_cam_AOS_2026.txt"
+
+## Observe how large these files are compared to those from the previous section
+get.filesize(in_ebd) 
+get.filesize(in_effort)
 
 # Section 2: Define auk filters for checklist data
 ?auk_ebd() #The first function of the filtering process is always this one! 
-?auk_species() #Another 'auk' function to filter species, see the pattern? auk_
+?auk_species() #This function works to filter species, see the pattern? auk_
+## Get familiar with a few essential functions we will use below: auk_unique, auk_complete, auk_rollup
 
-## For simplicity, ignore effort data for now (presence-only data) and create an object of filters
+## Filters are set up using the pipe to sequence the attributes of the data we want
 filters1 <-
   # Set EBD file path
   auk_ebd(in_ebd) |>
@@ -121,20 +146,35 @@ filters2 <-
 
 filters2 # Should look identical to filters1
 
+## Exploring tailored filters: Thinking about sampling design and reducing variation
+filters3<-auk_ebd(in_ebd) |>
+  auk_species(species = species_names) |>
+  auk_country("Honduras")|>
+  # Date: use standard ISO date format `"YYYY-MM-DD"`
+  auk_date(date = c("*-01-01", "*-12-31")) |>
+  # Time: 24h format with beginning and end times
+  auk_time(start_time = c("06:00", "14:00")) 
+
+filters3
+
+##---Exercise---
+# Design your own filters and print them out. The collection of filters can be thought of as the 'sampling design' of this eBird data as it describes time, place and other factors tailored to a question.
+
+#filters4<-
+
 # Section 3: Apply filters to EBD object
 ## Call AWK to execute filters; time depends on the size of your file 
-presence_out <- auk_filter(filters2,
-                           file = "data/ebd_filtered_crestedguan_presence.txt",
+presence_out <- auk_filter(filters3,
+                           file = "data/ebd_filtered_cregua_presence.txt",
                            overwrite = TRUE) |>
   # Read filtered data into R environment
   read_ebd()
 
-# --Quick Exercise--
-## Do a quick exploration of this dataset with what we learned in the first code-along
 
 #------------------------------------------------------------------------------#
 # Script 03: Using the sampling and ebd files to zerofill ----
 #------------------------------------------------------------------------------#
+
 library(tidyverse)
 library(auk)
 library(lubridate)
@@ -143,9 +183,15 @@ library(sf)
 source("code/custom-functions.R")
 set_theme(custom.theme())
 
-# Section 1: Set paths for a new dataset on birds of the United States
+# Section 1:  Set paths for raw EBD & effort data in
 in_ebd <- "data/ebd_filtered_us_AOS_2026.txt"
 in_effort <- "data/effort_filtered_us_AOS_2026.txt"
+
+## Observe how large these files are compared to those from the previous section
+get.filesize(in_ebd) 
+get.filesize(in_effort)
+
+## Read these files 
 
 # Section 2: Explore and define new auk filters for checklist AND effort data 
 species_names=c("amewoo")
@@ -164,8 +210,10 @@ filters <-
   auk_time(start_time = c("17:00", "23:00")) |>
   # Complete: all species seen or heard are recorded (important!)
   auk_complete()
+filters
 
 # Apply filters to EBD & effort objects
+
 ## Note: We can also define output file names outside of pipeline
 f_ebd <- "data/ebd_filtered_amewoo_presabs.txt"
 f_effort <- "data/effort_filtered_amewoo_presabs.txt"
@@ -175,7 +223,6 @@ f_ebd_effort <- auk_filter(filters,
                           file = f_ebd,
                           file_sampling = f_effort,
                           overwrite = TRUE) |>
-  # Read filtered data into R environment
   read_ebd()
 
 glimpse(f_ebd_effort) # EBD and effort datasets are now single object filtered by sampling event which will allow us to have necessary information to generate a "presence-absence" data set
@@ -183,12 +230,12 @@ glimpse(f_ebd_effort) # EBD and effort datasets are now single object filtered b
 # Section 3: Zerofill to generate a "presence-absence" data set
 
 ## Execute zero-filtering function
-presabs_zf <-
-  auk_zerofill(f_ebd_effort,
+presabs_zf <-auk_zerofill(f_ebd,
+              sampling_events=f_effort,
                collapse = TRUE)
 
-glimpse(presabs_zf$observations)
-glimpse(presabs_zf$sampling_events)
+glimpse(presabs_zf$observation_count) #observation
+glimpse(presabs_zf$sampling_event_identifier) #for each sampling event
 
 # Section 4: Transform effort variables for easier filtering & comprehension
 zf_eff_transf <- presabs_zf |>
@@ -208,7 +255,7 @@ zf_eff_transf <- presabs_zf |>
     day_of_year = yday(observation_date)
   )
 
-# Apply effort filters
+# Apply effort filters- I think we should move all of these above to the filtering section because auk already has this
 zf_eff_filtered <- zf_eff_transf |>
   filter(observation_type %in% c("Stationary", "Traveling"),
          !is.na(effort_hours), effort_hours >= 0.17, effort_hours <= 5,

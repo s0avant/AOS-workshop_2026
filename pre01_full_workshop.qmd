@@ -1,0 +1,198 @@
+---
+title: "auk Full Workflow: AOS 2026 workshop"
+author: "Aimee M. Van Tatenhove & Fabiola Rodríguez Vásquez"
+format: html
+editor: visual
+theme: "cerulean"
+page-layout: full
+toc: true
+toc-location: left
+embed-resources: true
+execute:
+  warning: false
+  message: false
+  out-width: "100%"
+---
+
+The full workflow for the AOS 2026 workshop, "Setting Up Your Analyses Up for Success with 'auk'". The workflow is divided into four lessons (i.e. separate scripts or Quarto documents) to:
+
+1.  Learn how to import 'auk' data & general exploration of the files' structure.
+
+2.  Learn how to use 'auk' filters to sample the eBird data for a project.
+
+3.  Learn how to process the ***ebd*** and ***sampling*** files to obtain a dataset for species "presences-absences".
+
+## Datasets and resources
+
+Participants will find all relevant resources in the provided folder that includes an R project, data and codes.
+
+### Data
+
+The instructors downloaded and processed eBird data to prepare ebd and sampling files for the workshop.
+
+- ***ebd*** and ***sampling*** files for three species found in the eastern United States, all available years.
+
+  - ebd_filtered_us_AOS_2026.txt
+
+  - effort_filtered_us_AOS_2026.txt
+
+- ***ebd*** and ***sampling*** files for two species found in the seven Central American countries.
+
+  - ebd_filtered_cam_AOS_2026.txt
+
+  - effort_filtered_cam_AOS_2026.txt
+
+Geospatial files will be used for the applications sections of this workshop and can be found in the folder "gis".
+
+### Scripts
+
+Separate Quarto documents (.qmd) or scripts? have been prepared for each of the objectives mentioned above. These documents have brief explanations or text that introduces an exercise and are followed by 'code chunks', spaces where R will be executed. Feel free to modify text below or above the code chunks to add your own notes, or add comments to your code within the code chunks.
+
+## Import and Explore 'auk' data
+
+The first step in our workflow is to call the libraries needed. The libraries should be installed but in case you need to do so, apply install.packages('packages')
+
+```{r}
+library(tidyverse)
+library(auk)
+source("code/custom-functions.R")
+```
+
+### Section 1: Load EBD (eBird Basic Dataset) and effort (sampling) files
+
+'auk' requires direction to where the downloaded eBird Basic Dataset (ebd) and effort (sampling) files are in your computer. Which is why this workflow needs to specify the directory of these input files.
+
+```{r}
+## Set paths for EBD & effort data in
+in_ebd_small <- "./data/ebd_filtered_cam_AOS_2026.txt"
+in_effort_small <- "./data/effort_filtered_cam_AOS_2026.txt"
+
+```
+
+The data has NOT been loaded yet! Remember that 'auk' is meant to be an effective way of processing the eBird large datasets but as we can see below these first sample datasets are not too big.
+
+```{r}
+## Smallish files, so we can load into R memory directly
+get.filesize(in_ebd_small)
+get.filesize(in_effort_small)
+
+```
+
+A function to read these files are *read_abd()* and *read_sampling().* Take a look at the help file for *read_ebd()*. It manages two things that are important to know: 1) The argument *unique=TRUE* , removes duplicated grouped checklists. 2) *rollup=TRUE,* deals with a taxonomic "rollup" so you are only working with species-level data.
+
+```{r}
+## How do we read the files?
+?read_ebd()
+```
+
+Once the files are read in, we are ready to get familiar with these files. Notice that the ebd file is smaller than the effort file, why could that be?
+
+```{r}
+## Apply read_ebd()
+ebd <- read_ebd(in_ebd_small) 
+effort <- read_sampling(in_effort_small) 
+```
+
+### Section 2: Exploring the structure of the eBird data
+
+The *ebd* object is the data for the species observed, *effort* holds the data for the sampling information. Compare their attributes (i.e. columns), to determine which are shared and which are not. 
+
+```{r}
+glimpse(ebd)
+```
+
+```{r}
+glimpse(effort)
+```
+
+Notice that *ebd* has fewer rows than *effort*. This is because *ebd* comes from the file with species observations, *effort* does not have any species column, the data that was downloaded was all available checklist sampling information that matched the other criteria (location, dates). *effort* will be key to understand the prevalence of a species, given how many checklists were compiled for an area.
+
+But before that lets keep exploring the *ebd* file because this is the data we are sampling from for our objectives. 
+
+*How many species are available in this dataset?*
+```{r}
+unique(ebd$common_name)
+```
+
+*How many species?*
+```{r}
+
+```
+
+*What is the date range for this data?*
+```{r}
+range(ebd$observation_date)
+```
+
+*How many counts does each species have?*
+```{r}
+table(ebd$common_name)
+```
+
+Now for some visual exploration. *Which country has the most detections?*
+```{r}
+## Explore visually by using ggplot's geom_bar which counts occurrences for a category
+## Observations dataset
+ggplot(ebd) +
+  geom_bar(aes(x = country)) +
+  ggtitle("Observations by country") +
+  xlab("Country") + ylab("Count")
+```
+
+```{r}
+ggplot(ebd) +
+  geom_bar(aes(x = country, color = common_name, fill = common_name),position=position_dodge()) +
+  ggtitle("Observations by Country and Species") +
+  coord_flip()+
+  xlab("Country") + ylab("Count") +
+  labs(color = "Species",
+       fill = "Species") 
+```
+*When does it seem to be a good time to observe the species?*
+```{r}
+ggplot(ebd) +
+  geom_bar(aes(x = observation_date, color = common_name, fill = common_name)) +
+  ggtitle("Observation Date by Species") +
+  xlab("Checklist date") + ylab("Count") +
+  labs(color = "Species",
+       fill = "Species")
+```
+*Which types of observation types or counting protocols give more data?*
+```{r}
+## Effort dataset
+ggplot(effort) +
+  geom_bar(aes(x = observation_type)) +
+  ggtitle("Observation Type") +
+  coord_flip()+
+  xlab("Type") + ylab("Count")
+```
+
+```{r}
+ggplot(effort) + # You can safely ignore the plotting error here
+  geom_bar(aes(x = duration_minutes)) +
+  ggtitle("Checklist Duration") +
+  xlab("Duration in minutes") + ylab("Count")
+```
+
+### Section 3: Pipes- the building block of the 'auk' workflow 
+Pipes come in two flavors: base "|>" and magrittr (tidyverse) "%>%". We will use base pipes today.
+
+```{r}
+# Example: no pipes (stepwise)
+tmp1 <- subset(effort, !is.na(duration_minutes))
+tmp1 <- transform(tmp1, duration_hours = duration_minutes / 60)
+duration_hours <- tmp1$duration_hours
+duration_max_no_pipe <- max(duration_hours)
+
+duration_max_no_pipe
+
+# Example: with base R pipe 
+duration_max_pipe <- effort |>
+  subset(!is.na(duration_minutes)) |>
+  transform(duration_hours = duration_minutes / 60) |>
+  _$duration_hours |> # "_" passes object to next line of code
+  max()
+
+duration_max_pipe
+```
+
