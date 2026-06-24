@@ -14,7 +14,7 @@ rm(list = ls())
 library(tidyverse)
 library(auk)
 source("code/custom-functions.R")
-
+set_theme(custom.)
 # Section 1: Load EBD (eBird Basic Dataset) and effort (sampling) files
 ## Set paths for EBD & effort data in
 in_ebd_small <- "./data/ebd_filtered_cam_AOS_2026.txt"
@@ -255,7 +255,7 @@ zf_eff_transf <- presabs_zf |>
     day_of_year = yday(observation_date)
   )
 
-# Apply effort filters- I think we should move all of these above to the filtering section because auk already has this
+# Apply effort filters
 zf_eff_filtered <- zf_eff_transf |>
   filter(observation_type %in% c("Stationary", "Traveling"),
          !is.na(effort_hours), effort_hours >= 0.17, effort_hours <= 5,
@@ -361,7 +361,7 @@ ggplot() +
 ## Define auk filters for checklist AND effort data (presence-absence data)
 filters_zerofill2 <-
   # Set EBD & effort file paths
-  auk_ebd(in_ebd, file_sampling = in_effort)    ### FABI: do you think we should also include auk_complete() or let them remember they need to use it? A reminder is fine. There are exploration instances where if you dont need detections non detections, its ok ifyou are looking at all checlists but for exploration purposes.
+  auk_ebd(in_ebd, file_sampling = in_effort)    
 # Add other filters of interest below with |>
 
 ## Apply filters to EBD & effort objects

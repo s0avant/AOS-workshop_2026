@@ -2,8 +2,9 @@
 title: "auk Full Workflow: AOS 2026 workshop"
 author: "Aimee M. Van Tatenhove & Fabiola Rodríguez Vásquez"
 format: html
+fig-format: svg
 editor: visual
-theme: "cerulean"
+theme: "flatly"
 page-layout: full
 toc: true
 toc-location: left
@@ -48,7 +49,7 @@ Geospatial files will be used for the applications sections of this workshop and
 
 Separate Quarto documents (.qmd) or scripts? have been prepared for each of the objectives mentioned above. These documents have brief explanations or text that introduces an exercise and are followed by 'code chunks', spaces where R will be executed. Feel free to modify text below or above the code chunks to add your own notes, or add comments to your code within the code chunks.
 
-## Import and Explore 'auk' data
+## Import and explore eBird raw data
 
 The first step in our workflow is to call the libraries needed. The libraries should be installed but in case you need to do so, apply install.packages('packages')
 
@@ -56,6 +57,8 @@ The first step in our workflow is to call the libraries needed. The libraries sh
 library(tidyverse)
 library(auk)
 source("code/custom-functions.R")
+
+theme_set(custom.theme())
 ```
 
 ### Section 1: Load EBD (eBird Basic Dataset) and effort (sampling) files
@@ -194,5 +197,363 @@ duration_max_pipe <- effort |>
   max()
 
 duration_max_pipe
+```
+
+
+
+## Setup and execute filters for eBird raw data in 'auk'
+
+For this portion of the workshop we will use only the *ebd* file with species observations, to learn how 'auk' filters work.
+
+```{r}
+library(tidyverse)
+library(auk)
+source("code/custom-functions.R")
+```
+
+### Section 1: Set path
+
+Remember, the first step is to setup the path for 'auk' to find the eBird files (ebd and sampling). We will continue working with the small Central American dataset.
+
+```{r}
+in_ebd <- "data/ebd_filtered_cam_AOS_2026.txt"
+```
+
+### Section 2: Define 'auk' filters
+
+Defining 'auk' filters has been compared to conducting your sampling design with already collected data. **This** is where you customize the information you need from a large dataset such as a complete country's eBird dataset.
+
+The package provides a prefix *'auk_'* to all functions that conduct a filtering task. 
+
+If you are working with large datasets, the filtering step uses *auk_ebd* first, to reference the file of interest instead of reading it into your R session's memory. By building your entire filter pipeline you are effectively using AWK to help filter large files before having to load them in with *read_ebd*.
+
+```{r}
+?auk_ebd() 
+
+# Try others such as ?auk_species, ?auk_date to see what they do
+```
+
+Lets build a simple set of filters. Remember that to build the sequence we will use the pipe "|>"
+
+The output is a summary of your filters, in this case it indicates the species of interest as the only filter and the rest maintain "all" data.
+```{r}
+filters1 <-
+  # Set EBD file path
+  auk_ebd(in_ebd) |>
+  # Species: common and scientific names can be mixed
+  auk_species(species = "Crested Guan") 
+
+filters1
+```
+
+As filters get more complicated (i.e. more than one species), it may be useful to create objects for the filters.
+```{r}
+# Define filters outside of pipeline; useful for complicated filters
+species <- c("Crested Guan", "Northern Emerald-Toucanet")
+species_names <- ebird_species(species, type = "common")
+species_names
+
+filters2 <-
+  # Set EBD file path
+  auk_ebd(in_ebd) |>
+  # Species: common and scientific names can be mixed
+  auk_species(species = species_names) 
+
+filters2
+```
+
+Lets build more filters.
+```{r}
+## Exploring tailored filters: Thinking about sampling design and reducing variation
+filters3<-auk_ebd(in_ebd) |>
+  auk_species(species = species_names) |>
+  auk_country("Honduras")|>
+  # Date: use standard ISO date format `"YYYY-MM-DD"`
+  auk_date(date = c("*-01-01", "*-12-31")) 
+
+filters3
+```
+
+### Section 3: Apply filters and save new dataset
+
+None of the filters above were saved in a file that can be used in analyses. The final step is to apply *auk_filter*.
+
+Below we filter, save the data and load it with *read_ebd*
+```{r}
+# Determine the path and name of your output file
+out_ebd<-"data/ebd_filtered_cam_presence.txt"
+
+# Apply the filter
+presence_out <- auk_filter(filters3,
+                           file = "data/ebd_filtered_cam_presence.txt",
+                           overwrite = TRUE) |>
+  # Read filtered data into R environment
+  read_ebd()
+```
+
+Below we confirm that this dataset only has the species and country data we specified.
+```{r}
+unique(presence_out$common_name)
+unique(presence_out$country)
+```
+We can also check how much we have reduced an original eBird file when filtering to the needs. 
+```{r}
+get.filesize(in_ebd) 
+get.filesize(out_ebd)
+```
+
+
+
+## Zerofilling eBird raw data to obtain a "presence-absence" dataset
+
+Presence-only data are useful for exploring how frequently a species has been detected and where. However, for some analyses, they are not enough to understand what drives species occurrence when there is no information on where the species is absent. This is where **zerofilling** comes in, an 'auk' function that can take the eBird data file (*ebd*) and the sampling file (also called *sed* sometimes) to use the checklist_id information and fill in which of the sampling events a species was observed or not observed.
+
+```{r}
+library(tidyverse)
+library(auk)
+library(lubridate)
+library(cowplot)
+library(sf)
+source("code/custom-functions.R")
+
+theme_set(custom.theme())
+```
+
+### Section 1: Set the path for the files
+
+For this zerofilling exercise we will use a different and larger dataset. In honor of the AOS 2026 location, we will use eBird raw data for the three banner species: American Woodcock, Prairie Warbler and Black-capped Chickadee. These observations were still filtered only to the eastern U.S. states and include all years of observation available.
+
+```{r}
+in_ebd <- "data/ebd_filtered_us_AOS_2026.txt"
+in_effort <- "data/effort_filtered_us_AOS_2026.txt"
+
+## Observe how large these files are compared to those from the previous section
+get.filesize(in_ebd) 
+get.filesize(in_effort)
+```
+### Section 2: Applying filters
+
+After identifying the file paths, lets set up some filters. Note that when calling *auk_ebd*, we need to include the path for the sampling file.
+
+**And**, we will also include a new function to ensure **complete** checklists using *auk_complete*. Complete checklists help confirm that we are capturing the most thorough sampling by an observer, including all available and identifiable species.
+```{r}
+species_names=c("amewoo")
+
+filters <-
+  # Set EBD & effort file paths
+  auk_ebd(in_ebd, file_sampling = in_effort) |>
+  # Species: common and scientific names can be mixed
+  auk_species(species = species_names) |>
+  # State: two-part 4-6 character codes
+  ## (2-letter ISO country code & 1-3 character state code). E.g., "US-NY"
+  auk_state(state = "US-MA") |>
+  # Date: use standard ISO date format `"YYYY-MM-DD"`
+  auk_date(date = c("2025-01-01", "2025-12-31")) |>
+  # Time: 24h format with beginning and end times
+  auk_time(start_time = c("17:00", "23:00")) |>
+  # Complete: all species seen or heard are recorded (important!)
+  auk_complete()
+filters
+```
+
+We filter the eBird and sampling data, save it and upload these new (*filtered*) data files.
+
+```{r}
+f_ebd <- "data/ebd_filtered_amewoo_presabs.txt"
+f_effort <- "data/effort_filtered_amewoo_presabs.txt"
+
+## Call AWK to execute filters
+f_ebd_effort <- auk_filter(filters,
+                          file = f_ebd,
+                          file_sampling = f_effort,
+                          overwrite = TRUE) |>
+  read_ebd()
+
+glimpse(f_ebd_effort) 
+```
+
+### Section 3: Zerofill to generate the presence-absence dataset
+
+Execute the zerofill function *auk_zerofill*.
+
+```{r}
+presabs_zf <-auk_zerofill(f_ebd,
+              sampling_events=f_effort,
+               collapse = TRUE)
+
+glimpse(presabs_zf)
+```
+
+The columns *observation_count* includes counts for each sampling event (i.e. *sampling_event_identifier* column).
+```{r}
+glimpse(presabs_zf$observation_count) #observation
+glimpse(presabs_zf$sampling_event_identifier) #for each sampling event
+```
+While this is already the presence-absence dataset there is some processing necessary for the columns. For example take a look at the range of the counts:
+```{r}
+range(presabs_zf$observation_count)
+```
+"X" is a valid recording character used by observers when they: do not want to count all individuals or are unsure of how many indivivuals were detected. Because there is no way of guessing if X means 1 or more, we should remove these from future analyses. 
+
+There are other small tweaks needed on the data for better comprehension and use for future analysis.
+
+```{r}
+zf_eff_transf <- presabs_zf |>
+  mutate(
+    # Convert count to integer and X to NA (ignore NA warning!)
+    ## X indicates species was present, but a number wasn't recorded
+    observation_count = as.integer(observation_count),
+    # effort_distance_km to 0 for stationary counts
+    effort_distance_km = if_else(observation_type == "Stationary",
+                                 0, effort_distance_km),
+    # Convert duration to hours
+    effort_hours = duration_minutes / 60,
+    # Convert speed km/h
+    effort_speed_kmph = effort_distance_km / effort_hours,
+    # Split date into year and day of year
+    month = month(observation_date),
+    day_of_year = yday(observation_date)
+  )
+```
+
+Along the way in the filtering process we can take a look at the distribution of these variables to learn about how much data we have.
+
+*In how many checklists was our species seen?*
+```{r}
+table(zf_eff_transf$species_observed)
+```
+
+*What is the range of the effort in distance covered?*
+```{r}
+ggplot(zf_eff_transf) +
+  geom_bar(aes(x = effort_distance_km)) +
+  ggtitle("Sampling effort: distance covered") +
+  xlab("Distance (km)")
+```
+*What is the range of the effort of hours of observation?*
+```{r}
+ggplot(zf_eff_transf) +
+  geom_bar(aes(x = effort_hours)) +
+  ggtitle("Sampling effort: hours of observation") +
+  xlab("No. hours")
+```
+*For which time periods is there data?*
+```{r}
+ggplot(zf_eff_transf) +
+  geom_bar(aes(x = observation_date)) +
+  ggtitle("Sampling effort: month") +
+  xlab("Month")
+```
+
+These graphs will help determine whether there are time periods, types of protocols (stationary versus walked), or effort levels that should be filtered out because they represent low data amounts.
+
+```{r}
+zf_eff_filtered <- zf_eff_transf |>
+  filter(observation_type %in% c("Stationary", "Traveling"),
+         !is.na(effort_hours), effort_hours >= 0.17, effort_hours <= 5,
+         !is.na(effort_distance_km), effort_distance_km <= 10,
+         effort_speed_kmph <= 50,
+         number_observers <= 10)
+
+# Compare the filtered and transformed datasets
+table(zf_eff_transf$species_observed)
+table(zf_eff_filtered$species_observed)
+```
+While the prevalence of species did not increase too much, a visual below shows how the data is better constrained to an effort window.
+```{r}
+plot_grid(
+  ggplot(zf_eff_transf) +
+    aes(x = effort_hours) +
+    geom_histogram(binwidth = 0.5,
+                   aes(y = after_stat(count / sum(count)))) +
+    scale_y_continuous(limits = c(0, NA), labels = scales::label_percent()) +
+    labs(x = "Duration (hours)",
+         y = "% of eBird checklists",
+         title = "Distribution of eBird checklist duration",
+         subtitle = "Before effort filtering"),
+  
+  ggplot(zf_eff_filtered) +
+    aes(x = effort_hours) +
+    geom_histogram(binwidth = 0.5,
+                   aes(y = after_stat(count / sum(count)))) +
+    scale_y_continuous(limits = c(0, NA), labels = scales::label_percent()) +
+    labs(x = "Duration (hours)",
+         y = "% of eBird checklists",
+         title = "Distribution of eBird checklist duration",
+         subtitle = "After effort filtering"),
+  ncol = 2)
+```
+
+This zerofilled data is almost ready for an analysis or further exploration but one last thing to consider after all the desired filters have been applied is to clean the data from columns that are not necessary.
+```{r}
+zf<-zf_eff_filtered|>
+  select(checklist_id,
+         latitude,
+         longitude,
+         observation_date,
+         effort_distance_km,
+         number_observers,
+         scientific_name,
+         observation_count,
+         species_observed,
+         effort_hours,
+         month,
+         day_of_year)
+```
+
+
+### Section 4: Final visualization
+Because each checklist or sampling event has latitude/longitude data, this data can be presented in maps and in future analyses, it can be linked to georefferenced environmental covariates.
+
+```{r}
+# Spatialize zerofilled object
+zf_sf <- zf |>
+  st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
+
+# Load GIS and shapefile data
+ee_landcover <- read.csv("data/gis/EarthEnv-landcover-northeast.csv") |>
+  left_join(landcover_palette) # Add map colors for nice plotting
+
+usa_sf <- read_sf("data/gis/usa-all-states.shp") |>
+  st_transform(crs = 4326)
+
+ne_states_sf <- read_sf("data/gis/usa-northeast-states.shp") |>
+  st_transform(crs = 4326)
+```
+ll
+```{r}
+ggplot() +
+  geom_sf(data = ne_states_sf) +
+  geom_sf(data = zf_sf, aes(color = species_observed), alpha = 0.5)
+
+```
+Lets modify the map to visualize the state of interest.
+```{r}
+
+state_sf<-ne_states_sf[ne_states_sf$NAME=="Massachusetts",]
+# Clip checklists to land; safe to ignore warning message
+zf_clip_sf <- st_intersection(zf_sf, state_sf)
+
+## Clipped map
+ggplot() +
+  geom_sf(data = state_sf) +
+  geom_sf(data = zf_clip_sf, aes(color = species_observed), alpha = 0.5) +
+  coord_sf(xlim = c(-74, -69), ylim = c(41, 43)) +
+  ggtitle("eBird Observations by Checklist") +
+  labs(color = "Species observed")
+```
+
+With your dataset you can plot it alongside other spatial datasets of interest such as this example with landcover.
+```{r}
+ggplot() +
+  geom_raster(data = ee_landcover,
+              aes(x = x, y = y,
+                  fill = class_names), alpha = 0.7) +
+  geom_sf(data = ne_states_sf, color = "grey30", fill = NA) +
+  geom_sf(data = zf_clip_sf, aes(color = species_observed), alpha = 0.5) +
+  scale_fill_manual(breaks = unique(ee_landcover$class_names),
+                    values = unique(ee_landcover$colors)) +
+  labs(color = "Species observed",
+       fill = "Landcover class")
 ```
 
