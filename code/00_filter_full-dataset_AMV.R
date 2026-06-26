@@ -24,14 +24,17 @@ in_ebd <- paste0(path, "ebd_US_relMar-2026.txt")
 in_eff <- paste0(path, "ebd_US_relMar-2026_sampling.txt")
 
 # Set paths for EBD & effort data out to local directory
-out_ebd <- "data/ebd_filtered_AOS_2026.txt"
-out_eff <- "data/effort_filtered_AOS_2026.txt"
+out_ebd <- "data/ebd_filtered_us_AOS_2026.txt"
+out_eff <- "data/effort_filtered_us_AOS_2026.txt"
+out_ebd_backup <- "data/ebd_filtered_us_AOS_2026_backup.txt"
+out_eff_backup <- "data/effort_filtered_us_AOS_2026_backup.txt"
 
 #------------------------------------------------------------------------------#
 # Set and execute filters ----
 #------------------------------------------------------------------------------#
 # Define species of interest
-species <- c("amewoo", "bkcchi", "prawar", "yerwar")
+# species <- c("amewoo", "bkcchi", "prawar", "yerwar")
+species <- c("amewoo", "bkcchi", "prawar")
 (species_names <- ebird_species(species, type = "common"))
 
 # Define regions of interest
@@ -42,7 +45,7 @@ years <- 2012:2025
 
 # Set data filters
 ## For checklist data only (presence-only data)
-filters_presence_1st <- 
+filters_presence <- 
   # Set EBD file path
   auk_ebd(in_ebd) |>
   # Set species of interest
@@ -53,7 +56,7 @@ filters_presence_1st <-
   auk_year(year = years)
 
 ## For checklist AND effort data (presence-absence data)
-filters_zerofill_1st <-
+filters_zerofill <-
   # Set EBD & effort file paths
   auk_ebd(in_ebd, file_sampling = in_eff) |>
   # Set species of interest
@@ -65,23 +68,47 @@ filters_zerofill_1st <-
   # Keep only complete checklists
   auk_complete()
 
-# Call AWK to filter presence-only data
-a1 <- Sys.time() # Start timer; may take multiple hours
+## For checklist AND effort data (presence-absence data) - tiny backup dataset
+filters_zerofill_backup <-
+  # Set EBD & effort file paths
+  auk_ebd(in_ebd, file_sampling = in_eff) |>
+  # Set species of interest
+  auk_species(species = species_names) |>
+  # Set spatial region of interest
+  auk_state(state = "US-MA") |>
+  # Set study period of interest
+  auk_year(year = 2025) |>
+  # Keep only complete checklists
+  auk_complete()
 
-# Execute filters
-presence_out <- auk_filter(filters_presence_1st,
-                           file = out_ebd,
-                           overwrite = TRUE)
-
-(runtime1 <- Sys.time() - a1) # End timer and save duration
+# # Call AWK to filter presence-only data
+# a1 <- Sys.time() # Start timer; may take multiple hours
+# 
+# # Execute filters
+# presence_out <- auk_filter(filters_presence,
+#                            file = out_ebd,
+#                            overwrite = TRUE)
+# 
+# (runtime1 <- Sys.time() - a1) # End timer and save duration
 
 # Call AWK to filter presence-absence data
 a2 <- Sys.time() # Start timer; may take multiple hours
 
 # Execute filters
-presabs_out <- auk_filter(filters_zerofill_1st,
+presabs_out <- auk_filter(filters_zerofill,
                           file = out_ebd,
                           file_sampling = out_eff,
                           overwrite = TRUE)
 
 (runtime2 <- Sys.time() - a2) # End timer and save duration
+
+# Call AWK to filter presence-absence data
+a3 <- Sys.time() # Start timer; may take multiple hours
+
+# Execute filters
+presabs_backup_out <- auk_filter(filters_zerofill_backup,
+                          file = out_ebd_backup,
+                          file_sampling = out_eff_backup,
+                          overwrite = TRUE)
+
+(runtime3 <- Sys.time() - a3) # End timer and save duration
