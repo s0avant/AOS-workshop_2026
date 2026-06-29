@@ -13,8 +13,8 @@ library(auk)
 #------------------------------------------------------------------------------#
 # Define filepath for EBD file
 ## Example only; modify filepath to access YOUR folder containing EBD data
-path <- "/Volumes/Eco Data/eBird_EBD_2026.05.05/ebd_US_smp_relMar-2026/" # Mac
-# path <- "D:/eBird_EBD_2026.05.05/ebd_US_smp_relMar-2026/" # Windows
+# path <- "/Volumes/Eco Data/eBird_EBD_2026.05.05/ebd_US_smp_relMar-2026/" # Mac
+path <- "D:/eBird_EBD_2026.05.05/ebd_US_smp_relMar-2026/" # Windows
 
 # IF ON WINDOWS, MUST INSTALL CYGWIN TO GET AWK (AKA GAWK)
 # https://www.cygwin.com/install.html
