@@ -1,0 +1,128 @@
+---
+title: "02- Using 'auk' filters"
+author: "Aimee M. Van Tatenhove & Fabiola Rodríguez Vásquez"
+format: html
+editor: visual
+---
+
+## Goal of section 2
+
+Learn how to use 'auk' filters to sample the eBird data for a project.
+
+For this portion of the workshop we will use only the *ebd* file with species observations, in order to learn how 'auk' filters work.
+
+```{r Set section 2 R environment}
+library(tidyverse)
+library(auk)
+source("code/custom-functions.R")
+```
+
+### 2.1. Set path
+
+Remember, the first step is to setup the path for 'auk' to find the eBird files. We will continue working with the small Central American dataset.
+
+```{r Setting the path to auk data}
+in_ebd <- 
+```
+
+### 2.2. Define 'auk' filters
+
+Defining 'auk' filters has been compared to conducting your sampling design with already collected data. **This** is where you customize the information you need from a large dataset such as the complete eBird dataset for a country.
+
+The package provides a prefix *'auk\_'* to all functions that conduct a filtering task.
+
+If you are working with large datasets, the filtering step uses *auk_ebd* first, to reference the file of interest instead of reading it into your R session's memory. By building your entire filter pipeline you are effectively using AWK to help filter large files before having to load them in with *read_ebd*.
+
+```{r Understanding auk functions}
+?auk_ebd() 
+
+# Try others such as ?auk_species, ?auk_date to see what they do:
+
+```
+
+Lets build a simple set of filters. Remember that to build the sequence we will use the pipe "\|\>"
+
+The output is a summary of your filters, in this case it indicates the species of interest as the only filter and the rest maintain "all" data.
+
+```{r Introducing filters in auk}
+filters1 <-
+  # Set EBD file path or object with the path with auk_ebd:
+  
+  # Set species to include, common and scientific names can be included:
+
+filters1
+```
+
+As filters get more complicated (i.e. more than one species), it may be useful to create objects for the filters.
+
+```{r Defining filters alternative}
+# Define filters outside of pipeline; useful for complicated filters
+species <- c("Crested Guan", "Northern Emerald-Toucanet")
+species_names <- ebird_species(species, type = "common")
+species_names
+
+filters2 <-
+  # Set EBD file path or object with the path with auk_ebd:
+  
+  # Determine species:
+
+filters2
+```
+
+Lets build more filters.
+
+```{r Exploring setting filters}
+# Exploring tailored filters: Thinking about sampling design and reducing variation
+filters3<-auk_ebd(in_ebd) |>
+  auk_species(species = species_names) |>
+  # Filter to a region of interest (e.g. country):
+  
+  # Filter to a date range (use standard ISO date format `"YYYY-MM-DD"`):
+
+filters3
+```
+
+**Exercise**
+Design your own filters and print them out. The collection of filters can be thought of as the 'sampling design' of this eBird data as it describes time, place and other factors tailored to a question.
+
+```{r Exercise to practice setting up filters}
+#filters4<-
+```
+
+
+### 2.3. Apply filters and save new dataset
+
+None of the filters above were saved in a file that can be used in analyses. The final step is to apply *auk_filter*.
+
+Below we filter, save the data and load it with *read_ebd*
+
+```{r Set output path and filter data}
+# Determine the path and name of your output file
+out_ebd<-
+
+  # Apply the auk filter to the filters description object:
+presence_out <- auk_filter() |>
+  # Read filtered data into R environment:
+  
+```
+
+Below we confirm that this dataset only has the species and country data we specified.
+
+```{r Exploration of new dataset}
+
+# Are the species of interest the only ones:
+unique(presence_out$common_name)
+
+# Are the countries of interest the only ones:
+unique(presence_out$country)
+```
+
+We can also check how much we have reduced an original eBird file after filtering.
+
+```{r Comparing file sizes}
+# Compare file sizes before and after filtering
+get.filesize(in_ebd) 
+get.filesize(out_ebd)
+```
+
+End of section: **Clear your workspace**
