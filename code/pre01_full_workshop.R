@@ -14,9 +14,10 @@ rm(list = ls())
 library(tidyverse)
 library(auk)
 source("code/custom-functions.R")
-set_theme(custom.)
+set_theme(custom.theme())
+
 # Section 1: Load EBD (eBird Basic Dataset) and effort (sampling) files
-## Set paths for EBD & effort data in
+## Set paths for EBD & effort data
 in_ebd_small <- "./data/ebd_filtered_cam_AOS_2026.txt"
 in_effort_small <- "./data/effort_filtered_cam_AOS_2026.txt"
 
@@ -28,8 +29,8 @@ get.filesize(in_effort_small)
 ?read_ebd()
 
 ## Apply read_ebd()
-ebd <- read_ebd(in_ebd) 
-effort <- read_sampling(in_effort) 
+ebd <- read_ebd(in_ebd_small) 
+effort <- read_sampling(in_effort_small) 
 
 ## What are these files?
 nrow(ebd) # Data of observations of species 
@@ -40,7 +41,6 @@ class(ebd)
 glimpse(ebd)
 glimpse(effort)
 unique(ebd$common_name)
-range(ebd$observation_date)
 
 ## --Exercise--
 ## Using the appropriate function of those above or other determine how many countries appear in the ebd dataset?
@@ -117,7 +117,6 @@ in_ebd <- "data/ebd_filtered_cam_AOS_2026.txt"
 
 ## Observe how large these files are compared to those from the previous section
 get.filesize(in_ebd) 
-get.filesize(in_effort)
 
 # Section 2: Define auk filters for checklist data
 ?auk_ebd() #The first function of the filtering process is always this one! 
@@ -340,9 +339,16 @@ ggplot() +
 # Script 04: Practical instructions----
 #------------------------------------------------------------------------------#
 
-# Apply your own filters to EBD & effort objects. We will use these files for the
-# remainder of workshop. What are you interested in exploring?
-# Any of the following filters can be applied:
+## Clean your environment first. Use this practice to put together the 'auk' workflow:
+
+## Set the path to ebd and sampling files used in this workshop, use the ones your prefer.
+
+## Identify and set the filters that would interest you. Think about a hypothetical research question including species, regions or effort types.
+
+## Generate a new dataset for your analyses by applying the filters, read this new data and explore it. If you wish zerofill this data to generate a presence-absence dataset.
+
+
+## auk functions glossary:
 # auk_species(): filter by species using common or scientific names.
 # auk_country(): filter by country using the standard English names or ISO 2-letter country codes.
 # auk_state(): filter by state using eBird state codes, see ?ebird_states.
@@ -358,13 +364,4 @@ ggplot() +
 # auk_breeding(): only retain observations that have an associate breeding bird atlas code.
 # auk_complete(): only retain checklists in which the observer has specified that they recorded all species seen or heard. It is necessary to retain only complete records for the creation of presence-absence data, because the “absence”” information is inferred by the lack of reporting of a species on checklists.
 
-## Define auk filters for checklist AND effort data (presence-absence data)
-filters_zerofill2 <-
-  # Set EBD & effort file paths
-  auk_ebd(in_ebd, file_sampling = in_effort)    
-# Add other filters of interest below with |>
-
-## Apply filters to EBD & effort objects
-
-## Explore variables in filtered dataset
-
+## Begin...
