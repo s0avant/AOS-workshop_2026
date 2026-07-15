@@ -1,0 +1,53 @@
+---
+title: "04-practice-auk"
+author: "Aimee M. Van Tatenhove & Fabiola Rodríguez Vásquez"
+format: html
+editor: visual
+---
+
+## Practice!
+
+- Clean your environment first. Use this practice to put together the 'auk' workflow:
+
+  - Set the path to ebd and sampling files used in this workshop, use the ones your prefer.
+
+  - Identify and set the filters that would interest you. Think about a hypothetical research question including species, regions or effort types.
+
+  - Generate a new dataset for your analyses by applying the filters, read this new data and explore it. If you wish zerofill this data to generate a presence-absence dataset.
+  
+```{r Your workflow}
+
+```
+  
+
+# Open to see the auk functions:
+
+Any of the following filters can be applied:
+
+- auk_species(): filter by species using common or scientific names.
+
+- auk_country(): filter by country using the standard English names or ISO 2-letter country codes.
+
+- auk_state(): filter by state using eBird state codes, see ?ebird_states.
+
+- auk_bcr(): filter by Bird Conservation Region (BCR) using BCR codes, see ?bcr_codes.
+
+- auk_bbox(): filter by spatial bounding box, i.e. a range of latitudes and longitudes in decimal degrees.
+
+- auk_date(): filter to checklists from a range of dates. To extract observations from a range of dates, regardless of year, use the wildcard “*” in place of the year, e.g. date = c("*-05-01", "\*-06-30") for observations from May and June of any year.
+
+- auk_last_edited(): filter to checklists from a range of last edited dates, useful for extracting just new or recently edited data.
+
+- auk_protocol(): filter to checklists that following a specific search protocol, either stationary, traveling, or casual.
+
+- auk_project(): filter to checklists collected as part of a specific project (e.g. a breeding bird survey).
+
+- auk_time(): filter to checklists started during a range of times-of-day.
+
+- auk_duration(): filter to checklists with observation durations within a given range.
+
+- auk_distance(): filter to checklists with distances traveled within a given range.
+
+- auk_breeding(): only retain observations that have an associate breeding bird atlas code.
+
+- auk_complete(): only retain checklists in which the observer has specified that they recorded all species seen or heard. It is necessary to retain only complete records for the creation of presence-absence data, because the “absence”” information is inferred by the lack of reporting of a species on checklists.
