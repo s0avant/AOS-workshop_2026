@@ -14,11 +14,10 @@ editor: visual
   - Identify and set the filters that would interest you. Think about a hypothetical research question including species, regions or effort types.
 
   - Generate a new dataset for your analyses by applying the filters, read this new data and explore it. If you wish zerofill this data to generate a presence-absence dataset.
-  
+
 ```{r Your workflow}
 
 ```
-  
 
 # Open to see the auk functions:
 

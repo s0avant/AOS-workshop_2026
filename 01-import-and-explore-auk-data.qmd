@@ -42,7 +42,7 @@ The first step in the 'auk' workflow is to call the necessary libraries for the 
 ```{r Set section 1 R environment}
 library(tidyverse)
 library(auk)
-source("code/custom-functions.R")
+source("custom-functions.R")
 
 set_theme(custom.theme())
 ```
@@ -55,7 +55,7 @@ Create paths for the *ebd* and *sampling* files provided by the instructors. Whe
 
 ```{r Set auk paths}
 # Set path for EBD or eBird basic dataset:
-in_ebd_small <- "./data/ebd_filtered_cam_AOS_2026.txt"
+in_ebd_small <- "data/ebd_filtered_cam_AOS_2026.txt"
 
 # Set path for effort data:
 in_effort_small <- 
@@ -81,6 +81,7 @@ Take a look at the help file for *read_ebd()*. It manages two things that are im
 ```
 
 Once the files are read in, we are ready to explore them.
+
 ```{r Apply read_abd}
 # Apply the read_ebd() function to the ebd file:
 ebd <- read_ebd() 
@@ -108,12 +109,13 @@ glimpse(effort)
 Notice that *ebd* has fewer rows than *effort*. This is because *ebd* comes from the file with species observations, *effort* does not have any species column, the data that was downloaded was all available checklist sampling information that matched the other criteria (location, dates) in the download request.
 
 #### 1.2.1 Exploring by accessing variable characteristics
-Lets keep exploring the *ebd* file because this is the data we are sampling from for our objectives.
+
+Let's keep exploring the *ebd* file because this is the data we are sampling from for our objectives.
 
 *How many species are available in this dataset?*
 
 ```{r Explore variable levels}
-unique()
+unique(ebd)
 ```
 
 *What is the date range for this data?*
@@ -129,6 +131,7 @@ table(ebd$)
 ```
 
 *How many countries appear in this dataset?*
+
 ```{r Exercise of variable exploration}
 # Exercise for participants. Determine which countries are in this dataset:
 
@@ -136,8 +139,7 @@ table(ebd$)
 
 #### 1.2.2 Exploring by plotting variables
 
-Now for some visual exploration. 
-*Which country has the most detections?*
+Now for some visual exploration. *Which country has the most detections?*
 
 ```{r Plotting observations by region}
 # Explore visually by using ggplot's geom_bar which counts occurrences for a category
@@ -154,9 +156,10 @@ Now for some visual exploration.
 
 ```{r Plotting observations by country x species}
 ggplot() +
-  geom_bar(aes(x = , color = , fill = ),position=position_dodge()) +
+  geom_bar(aes(x = , color = , fill = ),
+           position = position_dodge()) +
   ggtitle("Observations by Country and Species") +
-  coord_flip()+
+  coord_flip() +
   xlab("Country") + ylab("Count") +
   labs(color = "Species",
        fill = "Species") 
@@ -176,10 +179,10 @@ ggplot(ebd) +
 *Which types of observation types or counting protocols give more data?*
 
 ```{r Plotting effort types}
-ggplot(effort) + #Note the dataset used is not ebd
+ggplot(effort) + # Note the dataset used is not ebd
   geom_bar(aes(x = observation_type)) +
   ggtitle("Observation Type") +
-  coord_flip()+
+  coord_flip() +
   xlab("Type") + ylab("Count")
 ```
 
@@ -194,7 +197,7 @@ ggplot(effort) + # You can safely ignore the plotting error here
 
 'auk' is meant to be a customizable tool to generate your own datasets from eBird raw data. It is designed to work nicely with pipes to create a sequence of commands for how we want the data to be filtered.
 
-Pipes come in two flavors: base (|>) and magrittr (tidyverse) (%>%). We will use base pipes today in this workshop but know you could use either when creating your own workflows.
+Pipes come in two flavors: base (\|\>) and magrittr (tidyverse) (%\>%). We will use base pipes today in this workshop but know you could use either when creating your own workflows.
 
 Lets take a look at what pipes are meant to do. This is a snippet to filter data within the effort file. We create three objects and rewrite one of them once.
 

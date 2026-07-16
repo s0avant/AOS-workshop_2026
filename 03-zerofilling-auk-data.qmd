@@ -17,7 +17,7 @@ library(auk)
 library(lubridate)
 library(cowplot)
 library(sf)
-source("code/custom-functions.R")
+source("custom-functions.R")
 
 theme_set(custom.theme())
 ```
@@ -38,14 +38,14 @@ get.filesize(in_effort)
 
 ### 3.2. Applying filters
 
-After identifying the file paths, lets set up some filters. Note that when calling *auk_ebd*, we need to include the path for the sampling file.
+After identifying the file paths, let's set up some filters. Note that when calling *auk_ebd*, we need to include the path for the sampling file.
 
 **And**, we will also include a new function to only include **complete** checklists using *auk_complete*. Complete checklists help confirm that we are capturing the most thorough sampling by an observer, including all available and identifiable species.
 
 ```{r Setting filters new dataset}
 
 # Prepare the species filtering object for the American Woodcock
-species_names=c("amewoo")
+species_names = c("amewoo")
 
 filters <-
   # Set EBD & effort file paths:
@@ -67,7 +67,6 @@ filters
 We filter the eBird and sampling data, save it and upload these new (*filtered*) data files.
 
 ```{r Apply filters new dataset}
-
 # Set the path and filename for the ebd and effort output files:
 f_ebd <- "data/ebd_filtered_amewoo_presabs.txt"
 f_effort <- "data/effort_filtered_amewoo_presabs.txt"
@@ -85,7 +84,6 @@ glimpse(f_ebd_effort)
 Execute the zerofill function *auk_zerofill*.
 
 ```{r Apply zerofill}
-
 # Call zerofill including the effort and ebd files:
 presabs_zf <-auk_zerofill()
 
@@ -95,8 +93,8 @@ glimpse(presabs_zf)
 The columns *observation_count* includes counts for each sampling event.
 
 ```{r Check columns with presence-absence}
-glimpse(presabs_zf$observation_count) #observation
-glimpse(presabs_zf$checklist_id) #for each sampling event
+glimpse(presabs_zf$observation_count) # observation
+glimpse(presabs_zf$checklist_id) # for each sampling event
 ```
 
 While this is already the presence-absence dataset there is some processing necessary for the columns to be useful for future analyses. For example take a look at the range of the counts:
@@ -105,7 +103,7 @@ While this is already the presence-absence dataset there is some processing nece
 range(presabs_zf$observation_count)
 ```
 
-"X" is a valid recording character used by observers when they: do not want to count all individuals or are unsure of how many indivivuals were detected. Because there is no way of guessing if X means 1 or more, we should remove these for future analyses.
+"X" is a valid recording character used by observers when they: do not want to count all individuals or are unsure of how many individuals were detected. Because there is no way of guessing if X means 1 or more, we should remove these for future analyses.
 
 There are other small tweaks needed on the data for better comprehension and use for future analysis.
 
@@ -209,7 +207,7 @@ plot_grid(
 This zerofilled data is almost ready for an analysis or further exploration but one last thing to consider after all the desired filters have been applied is to clean the data from columns that are not necessary.
 
 ```{r Final preparations for auk clean dataset}
-zf<-zf_eff_filtered|>
+zf <- zf_eff_filtered |>
   # Select only columns that you would use in your analysis:
   select(checklist_id,
          latitude,
@@ -227,7 +225,7 @@ zf<-zf_eff_filtered|>
 
 ### 3.4. Final visualization
 
-Because each checklist or sampling event has latitude/longitude data, this data can be presented in maps. It can also be linked to georefferenced environmental covariates for future analyses.
+Because each checklist or sampling event has latitude/longitude data, this data can be presented in maps. It can also be linked to georeferenced environmental covariates for future analyses.
 
 ```{r Prepare to visualize data spatially}
 # Spatialize zerofilled object
@@ -237,9 +235,6 @@ zf_sf <- zf |>
 # Load GIS and shapefile data
 ee_landcover <- read.csv("data/gis/EarthEnv-landcover-northeast.csv") |>
   left_join(landcover_palette) # Add map colors for nice plotting
-
-usa_sf <- read_sf("data/gis/usa-all-states.shp") |>
-  st_transform(crs = 4326)
 
 ne_states_sf <- read_sf("data/gis/usa-northeast-states.shp") |>
   st_transform(crs = 4326)
@@ -257,8 +252,7 @@ ggplot() +
 Lets modify the map to visualize the state of interest.
 
 ```{r Plot observations for site of interest}
-
-state_sf<-ne_states_sf[ne_states_sf$NAME=="Massachusetts",]
+state_sf <- ne_states_sf[ne_states_sf$NAME == "Massachusetts", ]
 # Clip checklists to land; safe to ignore warning message
 zf_clip_sf <- st_intersection(zf_sf, state_sf)
 
@@ -282,6 +276,24 @@ ggplot() +
   geom_sf(data = zf_clip_sf, aes(color = species_observed), alpha = 0.5) +
   scale_fill_manual(breaks = unique(ee_landcover$class_names),
                     values = unique(ee_landcover$colors)) +
+  xlab("Longitude") + ylab("Latitude") +
+  labs(color = "Species observed",
+       fill = "Landcover class")
+```
+
+Try zooming in (using *coord_sf*) to see if you can identify any associations with observations of your species and landcover types.
+
+```{r Plotting observations with other spatial objects zoom}
+ggplot() +
+  geom_raster(data = ee_landcover,
+              aes(x = x, y = y,
+                  fill = class_names), alpha = 0.7) +
+  geom_sf(data = ne_states_sf, color = "grey30", fill = NA) +
+  geom_sf(data = zf_clip_sf, aes(color = species_observed), alpha = 0.5) +
+  coord_sf(xlim = c(-73, -72), ylim = c(42, 42.5)) + # Adjust to your liking
+  scale_fill_manual(breaks = unique(ee_landcover$class_names),
+                    values = unique(ee_landcover$colors)) +
+  xlab("Longitude") + ylab("Latitude") +
   labs(color = "Species observed",
        fill = "Landcover class")
 ```

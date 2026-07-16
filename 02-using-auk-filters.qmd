@@ -14,7 +14,7 @@ For this portion of the workshop we will use only the *ebd* file with species ob
 ```{r Set section 2 R environment}
 library(tidyverse)
 library(auk)
-source("code/custom-functions.R")
+source("custom-functions.R")
 ```
 
 ### 2.1. Set path
@@ -73,7 +73,7 @@ Lets build more filters.
 
 ```{r Exploring setting filters}
 # Exploring tailored filters: Thinking about sampling design and reducing variation
-filters3<-auk_ebd(in_ebd) |>
+filters3 <- auk_ebd(in_ebd) |>
   auk_species(species = species_names) |>
   # Filter to a region of interest (e.g. country):
   
@@ -82,13 +82,11 @@ filters3<-auk_ebd(in_ebd) |>
 filters3
 ```
 
-**Exercise**
-Design your own filters and print them out. The collection of filters can be thought of as the 'sampling design' of this eBird data as it describes time, place and other factors tailored to a question.
+**Exercise** Design your own filters and print them out. The collection of filters can be thought of as the 'sampling design' of this eBird data as it describes time, place and other factors tailored to a question.
 
 ```{r Exercise to practice setting up filters}
-#filters4<-
+filters4 <-
 ```
-
 
 ### 2.3. Apply filters and save new dataset
 
@@ -98,7 +96,7 @@ Below we filter, save the data and load it with *read_ebd*
 
 ```{r Set output path and filter data}
 # Determine the path and name of your output file
-out_ebd<-
+out_ebd <-
 
   # Apply the auk filter to the filters description object:
 presence_out <- auk_filter() |>

@@ -5,12 +5,13 @@
 # Custom ggplot theme ----
 custom.theme <- function(){
   theme_bw() +
-    theme(axis.text = element_text(size = 12),
-          axis.title = element_text(size = 14),
-          plot.title = element_text(size = 20),
-          plot.subtitle = element_text(size = 16),
-          legend.text = element_text(size = 14),
-          legend.title = element_text(size = 16),
+    theme(axis.text = element_text(size = 8),
+          axis.title = element_text(size = 9),
+          plot.title = element_text(size = 12),
+          plot.subtitle = element_text(size = 10),
+          legend.text = element_text(size = 8),
+          legend.title = element_text(size = 9),
+          legend.key.size = unit(0.3, "cm"),
           update_geom_defaults("bar", list(alpha = 0.6,
                                            color = viridisLite::plasma(1),
                                            fill = viridisLite::plasma(1))),
@@ -26,13 +27,13 @@ blue_palette <-
   colorRampPalette(c("#262655", "#365695", "#4582C0", "#4C96D4", "#54ADEB", "#91C2E8", "#EEEEFF"))
 
 landcover_palette <-
-  data.frame(class_names = c("Evergreen/Deciduous Needleleaf Trees",
+  data.frame(class_names = c("Needleleaf Trees",
                              "Evergreen Broadleaf Trees",
                              "Deciduous Broadleaf Trees",
                              "Mixed/Other Trees",
                              "Shrubs",
                              "Herbaceous Vegetation",
-                             "Cultivated and Managed Vegetation",
+                             "Cultivated Vegetation",
                              "Regularly Flooded Vegetation",
                              "Urban/Built-up",
                              "Snow/Ice",

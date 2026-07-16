@@ -13,7 +13,7 @@ rm(list = ls())
 #------------------------------------------------------------------------------#
 library(tidyverse)
 library(auk)
-source("code/custom-functions.R")
+source("custom-functions.R")
 set_theme(custom.theme())
 
 # Section 1: Load EBD (eBird Basic Dataset) and effort (sampling) files
@@ -110,7 +110,7 @@ duration_max_pipe
 #------------------------------------------------------------------------------#
 library(tidyverse)
 library(auk)
-source("code/custom-functions.R")
+source("custom-functions.R")
 
 # Section 1:  Set paths for raw EBD & effort data in
 in_ebd <- "data/ebd_filtered_cam_AOS_2026.txt"
@@ -179,7 +179,7 @@ library(auk)
 library(lubridate)
 library(cowplot)
 library(sf)
-source("code/custom-functions.R")
+source("custom-functions.R")
 set_theme(custom.theme())
 
 # Section 1:  Set paths for raw EBD & effort data in
@@ -298,9 +298,6 @@ zf_sf <- zf_eff_filtered |>
 # Load GIS and shapefile data
 ee_landcover <- read.csv("data/gis/EarthEnv-landcover-northeast.csv") |>
   left_join(landcover_palette) # Add map colors for nice plotting
-
-usa_sf <- read_sf("data/gis/usa-all-states.shp") |>
-  st_transform(crs = 4326)
 
 ne_states_sf <- read_sf("data/gis/usa-northeast-states.shp") |>
   st_transform(crs = 4326)
