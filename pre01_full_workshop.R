@@ -321,7 +321,7 @@ ggplot() +
 
 ## Add landcover data
 ggplot() +
-  geom_raster(data = ee_landcover,
+  geom_tile(data = ee_landcover,
               aes(x = x, y = y,
                   fill = class_names), alpha = 0.7) +
   geom_sf(data = ne_states_sf, color = "grey30", fill = NA) +
@@ -331,6 +331,20 @@ ggplot() +
   labs(color = "Species observed",
        fill = "Landcover class")
 
+# Try zooming in (using coord_sf) to see if you can identify any associations
+## with observations of your species and landcover types.
+ggplot() +
+  geom_tile(data = ee_landcover,
+            aes(x = x, y = y,
+                fill = class_names), alpha = 0.7) +
+  geom_sf(data = ne_states_sf, color = "grey30", fill = NA) +
+  geom_sf(data = zf_clip_sf, aes(color = species_observed), alpha = 0.5) +
+  coord_sf(xlim = c(-72.9, -72.3), ylim = c(42, 42.5)) + # Adjust to your liking
+  scale_fill_manual(breaks = unique(ee_landcover$class_names),
+                    values = unique(ee_landcover$colors)) +
+  xlab("Longitude") + ylab("Latitude") +
+  labs(color = "Species observed",
+       fill = "Landcover class")
 
 #------------------------------------------------------------------------------#
 # Script 04: Practical instructions----

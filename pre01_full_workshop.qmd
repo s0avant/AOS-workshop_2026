@@ -615,7 +615,7 @@ With your dataset you can plot it alongside other spatial datasets of interest s
 ```{r Plotting observations with other spatial objects}
 #| fig-height: 10
 ggplot() +
-  geom_raster(data = ee_landcover,
+  geom_tile(data = ee_landcover,
               aes(x = x, y = y,
                   fill = class_names), alpha = 0.7) +
   geom_sf(data = ne_states_sf, color = "grey30", fill = NA) +
@@ -632,7 +632,7 @@ Try zooming in (using *coord_sf*) to see if you can identify any associations wi
 ```{r Plotting observations with other spatial objects zoom}
 #| fig-height: 10
 ggplot() +
-  geom_raster(data = ee_landcover,
+  geom_tile(data = ee_landcover,
               aes(x = x, y = y,
                   fill = class_names), alpha = 0.7) +
   geom_sf(data = ne_states_sf, color = "grey30", fill = NA) +
