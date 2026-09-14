@@ -10,28 +10,28 @@ library(terra)
 #------------------------------------------------------------------------------#
 # Read in data ----
 #------------------------------------------------------------------------------#
-usa_sf <- read_sf("../../Data/Shapefiles/cb_2018_us_state_500k/cb_2018_us_state_500k.shp")
-bel_sf <- read_sf("../../Data/Shapefiles/geoBoundaries-BLZ-ADM0-all/geoBoundaries-BLZ-ADM0.shp")
-cri_sf <- read_sf("../../Data/Shapefiles/geoBoundaries-CRI-ADM0-all/geoBoundaries-CRI-ADM0.shp")
-slv_sf <- read_sf("../../Data/Shapefiles/geoBoundaries-SLV-ADM0-all/geoBoundaries-SLV-ADM0.shp")
-gtm_sf <- read_sf("../../Data/Shapefiles/geoBoundaries-GTM-ADM0-all/geoBoundaries-GTM-ADM0.shp")
-hnd_sf <- read_sf("../../Data/Shapefiles/geoBoundaries-HND-ADM0-all/geoBoundaries-HND-ADM0.shp")
-nic_sf <- read_sf("../../Data/Shapefiles/geoBoundaries-NIC-ADM0-all/geoBoundaries-NIC-ADM0.shp")
-pan_sf <- read_sf("../../Data/Shapefiles/geoBoundaries-PAN-ADM0-all/geoBoundaries-PAN-ADM0.shp")
+usa_sf <- read_sf("../cb_2018_us_state_500k/cb_2018_us_state_500k.shp")
+bel_sf <- read_sf("../geoBoundaries-BLZ-ADM0-all/geoBoundaries-BLZ-ADM0.shp")
+cri_sf <- read_sf("../geoBoundaries-CRI-ADM0-all/geoBoundaries-CRI-ADM0.shp")
+slv_sf <- read_sf("../geoBoundaries-SLV-ADM0-all/geoBoundaries-SLV-ADM0.shp")
+gtm_sf <- read_sf("../geoBoundaries-GTM-ADM0-all/geoBoundaries-GTM-ADM0.shp")
+hnd_sf <- read_sf("../geoBoundaries-HND-ADM0-all/geoBoundaries-HND-ADM0.shp")
+nic_sf <- read_sf("../geoBoundaries-NIC-ADM0-all/geoBoundaries-NIC-ADM0.shp")
+pan_sf <- read_sf("../geoBoundaries-PAN-ADM0-all/geoBoundaries-PAN-ADM0.shp")
 
 EarthEnv <-
-  rast(c("../../Data/EarthEnv_1kmConsensusLandCover/consensus_full_class_1.tif",
-         "../../Data/EarthEnv_1kmConsensusLandCover/consensus_full_class_2.tif",
-         "../../Data/EarthEnv_1kmConsensusLandCover/consensus_full_class_3.tif",
-         "../../Data/EarthEnv_1kmConsensusLandCover/consensus_full_class_4.tif",
-         "../../Data/EarthEnv_1kmConsensusLandCover/consensus_full_class_5.tif",
-         "../../Data/EarthEnv_1kmConsensusLandCover/consensus_full_class_6.tif",
-         "../../Data/EarthEnv_1kmConsensusLandCover/consensus_full_class_7.tif",
-         "../../Data/EarthEnv_1kmConsensusLandCover/consensus_full_class_8.tif",
-         "../../Data/EarthEnv_1kmConsensusLandCover/consensus_full_class_9.tif",
-         "../../Data/EarthEnv_1kmConsensusLandCover/consensus_full_class_10.tif",
-         "../../Data/EarthEnv_1kmConsensusLandCover/consensus_full_class_11.tif",
-         "../../Data/EarthEnv_1kmConsensusLandCover/consensus_full_class_12.tif"))
+  rast(c("../EarthEnv_1kmConsensusLandCover/consensus_full_class_1.tif",
+         "../EarthEnv_1kmConsensusLandCover/consensus_full_class_2.tif",
+         "../EarthEnv_1kmConsensusLandCover/consensus_full_class_3.tif",
+         "../EarthEnv_1kmConsensusLandCover/consensus_full_class_4.tif",
+         "../EarthEnv_1kmConsensusLandCover/consensus_full_class_5.tif",
+         "../EarthEnv_1kmConsensusLandCover/consensus_full_class_6.tif",
+         "../EarthEnv_1kmConsensusLandCover/consensus_full_class_7.tif",
+         "../EarthEnv_1kmConsensusLandCover/consensus_full_class_8.tif",
+         "../EarthEnv_1kmConsensusLandCover/consensus_full_class_9.tif",
+         "../EarthEnv_1kmConsensusLandCover/consensus_full_class_10.tif",
+         "../EarthEnv_1kmConsensusLandCover/consensus_full_class_11.tif",
+         "../EarthEnv_1kmConsensusLandCover/consensus_full_class_12.tif"))
 
 #------------------------------------------------------------------------------#
 # Merge shapefiles & crop raster stack ----

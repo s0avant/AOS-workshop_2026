@@ -1,10 +1,10 @@
 # AOS-workshop_2026
 
-##### Public repository of materials for *Setting Your Analyses Up For Success With eBird Data: Preparing Raw Data With ‘Auk’ in R*, presented at the 2026 [American Ornithological Society](https://americanornithology.org/) annual meeting in Amherst, Massachusetts, USA.
+#### Public repository of materials for *Setting Your Analyses Up For Success With eBird Data: Preparing Raw Data With ‘Auk’ in R*, presented at the 2026 [American Ornithological Society](https://americanornithology.org/) annual meeting in Amherst, Massachusetts, USA.
 
 *Updated September 14, 2026*
 
-**Instructors:** [Aimee M. Van Tatenhove](https://www.avantatenhove.com), Cornell Lab of Ornithology; Fabiola Rodríguez Vásquez, Cornell University
+**Instructors:** [Aimee M. Van Tatenhove](https://www.avantatenhove.com), Cornell Lab of Ornithology; [Fabiola Rodríguez Vásquez](https://cals.cornell.edu/people/fabiola-rodriguez-vasquez), Cornell University
 
 **Target audience:** Researchers with interest in using [eBird data](https://ebird.org/home) for research and visualization, but who have no to minimal prior experience using eBird data or the [auk R package](https://cornelllabofornithology.github.io/auk/). This workshop is fitting for a broad audience, from graduate students to research associates. Participants must feel comfortable working with [programming language R](https://www.r-project.org/) syntax and know how to navigate a package’s help files, and understand how these explain arguments. Familiarity or working knowledge of the [tidyverse packages](https://tidyverse.org/) is recommended.
 
@@ -16,9 +16,13 @@
 
 > ###### Van Tatenhove, A.M., Rodríguez Vásquez, F.G. (2026). *Setting Your Analyses Up For Success With eBird Data: Preparing Raw Data With ‘Auk’ in R.* <https://github.com/s0avant/AOS-workshop_2026>
 
-*To cite the auk package:*
+*To cite the auk package version used in this workshop:*
 
 > ###### Strimas-Mackey, M., Miller, E., Hochachka, W. (2026). *auk: eBird Data Extraction and Processing in R*. R package version 0.9.2, <https://cornelllabofornithology.github.io/auk/>.
+
+*To cite the eBird Basic Dataset version used in this workshop:*
+
+> ###### eBird Basic Dataset. (2026). Version: EBD_relJul-2026. Cornell Lab of Ornithology, Ithaca, New York.
 
 **Further reading and resources:**
 
@@ -28,7 +32,7 @@
 
 ------------------------------------------------------------------------
 
-#### Repository directory structure
+### Repository directory structure
 
 ```         
 .
@@ -61,9 +65,9 @@
         └── Welcome.pdf
 ```
 
-#### Repository file descriptions
+### Repository file descriptions
 
-##### ./
+#### ./
 
 - **README.md**
   - Project README file formatted in markdown
@@ -72,7 +76,7 @@
 - **AOS-workshop_2026.Rproj**
   - Rproj file created by RStudio for easy management of working directories. Double-click to open this project in RStudio.
 
-##### ./code
+#### ./code
 
 - **00_full_workshop.qmd**
   - Reference (completed) Quarto document containing explanatory text and R code for all workshop demonstrations and exercises
@@ -93,14 +97,32 @@
 - **custom-functions.R**
   - R script containing custom functions and ggplot themes
 
-##### ./data
+#### ./data
 
 - **eBird.zip**
   - Compressed data folder containing eBird Basic Database files. Unzip before beginning workshop.
+  - Contains:
+    - ebd_filtered_cam_AOS_2026.txt
+      - eBird Basic observation dataset for Crested Guan & Northern Emerald-Toucanet in Central America in 2025 & 2026
+    - ebd_filtered_us_AOS_2026.txt
+      - eBird Basic observation dataset for Black-capped Chickadee, Prairie Warbler, & American Woodcock in the United States in 2025
+    - effort_filtered_cam_AOS_2026.txt
+      - eBird Basic effort dataset for Crested Guan & Northern Emerald-Toucanet in Central America in 2025 & 2026
+    - effort_filtered_us_AOS_2026.txt
+      - eBird Basic effort dataset for Black-capped Chickadee, Prairie Warbler, & American Woodcock in the United States in 2025
 - **gis.zip**
   - Compressed data folder containing geospatial data files. Unzip before beginning workshop.
+    - Contains:
+      - EarthEnv-landcover-cam.csv
+        - 1-km consensus landcover for Central America provided by EarthEnv (Tuanmu & Jetz 2014)
+      - EarthEnv-landcover-northeast.csv
+        - 1-km consensus landcover for the northeastern United States provided by EarthEnv (Tuanmu & Jetz 2014)
+      - cam-countries.\*
+        - Shapefiles (.dbf, .prj, .shp, & .shx formats) of Central American country boundaries provided by geoBoundaries (Runfola et al. 2020)
+      - usa-northeast-states.\*
+        - Shapefiles (.dbf, .prj, .shp, & .shx formats) of United States state boundaries provided by geoBoundaries (Runfola et al. 2020)
 
-##### ./reference-materials
+#### ./reference-materials
 
 - **00_full_workshop_original.pdf**
   - Rendered PDF document of full workshop code and exercises presented at the AOS 2026 conference.
@@ -115,7 +137,7 @@
 - **eBird_Basic_Dataset_Metadata_v1.16.pdf**
   - Information about the eBird Basic Dataset
 
-##### ./reference-materials/presentations
+#### ./reference-materials/presentations
 
 - **auk-eBird-AOS_2026.08.01.pdf**
   - Presentation slides: introduction to the auk R package, including how it works, basic functionality, and author information
@@ -125,3 +147,14 @@
   - Presentation slides: introduction to eBird and eBird dataset access and structure
 - **Welcome.pdf**
   - Presentation slides: overview and goals of the 2026 Amherst workshop
+
+------------------------------------------------------------------------
+
+### Cited works
+
+- eBird Basic Dataset. (2026). Version: EBD_relJul-2026. Cornell Lab of Ornithology, Ithaca, New York.
+- Runfola, D. et al. (2020) geoBoundaries: A global database of political administrative boundaries. PLoS ONE 15(4): e0231866. https://doi.org/10.1371/journal.pone.0231866
+- Strimas-Mackey, M., Hochachka, W.M., Ruiz-Gutierrez, V., Robinson, O.J., Miller,  E.T., Auer, T., Kelling,  S., Fink, D., Johnston, A. (2023). Best Practices for Using eBird Data. Version 2.0. https://ebird.github.io/ebird-best-practices/. Cornell Lab of Ornithology, Ithaca, New York. https://doi.org/10.5281/zenodo.3620739
+- Strimas-Mackey, M., Miller, E., Hochachka, W. (2026). auk: eBird Data Extraction and Processing in R. R package version 0.9.2, <https://cornelllabofornithology.github.io/auk/>.
+- Tuanmu, M.-N. and Jetz, W. (2014). A global 1-km consensus land-cover product for biodiversity and ecosystem modeling. Global Ecology and Biogeography 23(9): 1031-1045.
+- Wickham, H., Averick, M., Bryan, J., Chang, W., McGowan, L.D., François, R., Grolemund, G., Hayes, A., Henry, L., Hester, J., Kuhn, M., Pedersen, T.L., Miller, E., Bache, S.M., Müller, K., Ooms, J., Robinson, D., Seidel, D.P., Spinu, V., Takahashi, K., Vaughan, D., Wilke, C., Woo, K., Yutani, H. (2019). “Welcome to the tidyverse.” *Journal of Open Source Software*, *4*(43), 1686. <doi:10.21105/joss.01686> <https://doi.org/10.21105/joss.01686>.
