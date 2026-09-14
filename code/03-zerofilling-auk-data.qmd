@@ -68,8 +68,8 @@ We filter the eBird and sampling data, save it and upload these new (*filtered*)
 
 ```{r Apply filters new dataset}
 # Set the path and filename for the ebd and effort output files:
-f_ebd <- "data/ebd_filtered_amewoo_presabs.txt"
-f_effort <- "data/effort_filtered_amewoo_presabs.txt"
+f_ebd <- "../data/eBird/ebd_filtered_amewoo_presabs.txt"
+f_effort <- "../data/eBird/effort_filtered_amewoo_presabs.txt"
 
   # Filter the data using the filtering object, indicate the output files: 
 f_ebd_effort <- auk_filter() |>
@@ -233,10 +233,10 @@ zf_sf <- zf |>
   st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
 
 # Load GIS and shapefile data
-ee_landcover <- read.csv("data/gis/EarthEnv-landcover-northeast.csv") |>
+ee_landcover <- read.csv("../data/gis/EarthEnv-landcover-northeast.csv") |>
   left_join(landcover_palette) # Add map colors for nice plotting
 
-ne_states_sf <- read_sf("data/gis/usa-northeast-states.shp") |>
+ne_states_sf <- read_sf("../data/gis/usa-northeast-states.shp") |>
   st_transform(crs = 4326)
 ```
 

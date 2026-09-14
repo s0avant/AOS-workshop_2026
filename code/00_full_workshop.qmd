@@ -77,8 +77,8 @@ Create paths for the ebd and sampling files provided by the instructors. When yo
 
 ```{r Set auk paths}
 ## Set paths for EBD & effort data
-in_ebd_small <- "data/ebd_filtered_cam_AOS_2026.txt"
-in_effort_small <- "data/effort_filtered_cam_AOS_2026.txt"
+in_ebd_small <- "../data/eBird/ebd_filtered_cam_AOS_2026.txt"
+in_effort_small <- "../data/eBird/effort_filtered_cam_AOS_2026.txt"
 
 ```
 
@@ -254,7 +254,7 @@ source("custom-functions.R")
 Remember, the first step is to setup the path for 'auk' to find the eBird files. We will continue working with the small Central American dataset.
 
 ```{r Setting the path to auk data}
-in_ebd <- "data/ebd_filtered_cam_AOS_2026.txt"
+in_ebd <- "../data/eBird/ebd_filtered_cam_AOS_2026.txt"
 ```
 
 ### 2.2. Define 'auk' filters
@@ -329,11 +329,11 @@ Below we filter, save the data and load it with read_ebd
 
 ```{r Set output path and filter data}
 # Determine the path and name of your output file
-out_ebd <- "data/ebd_filtered_cam_presence.txt"
+out_ebd <- "../data/eBird/ebd_filtered_cam_presence.txt"
 
 # Apply the filter
 presence_out <- auk_filter(filters3,
-                           file = "data/ebd_filtered_cam_presence.txt",
+                           file = "../data/eBird/ebd_filtered_cam_presence.txt",
                            overwrite = TRUE) |>
   # Read filtered data into R environment
   read_ebd()
@@ -376,8 +376,8 @@ theme_set(custom.theme())
 For this zerofilling exercise we will use a different and larger dataset. In honor of the AOS 2026 location, we will use eBird raw data for the three banner species: American Woodcock, Prairie Warbler and Black-capped Chickadee. Observations were filtered for the eastern U.S.
 
 ```{r Setting the path to a new dataset}
-in_ebd <- "data/ebd_filtered_us_AOS_2026.txt"
-in_effort <- "data/effort_filtered_us_AOS_2026.txt"
+in_ebd <- "../data/eBird/ebd_filtered_us_AOS_2026.txt"
+in_effort <- "../data/eBird/effort_filtered_us_AOS_2026.txt"
 
 ## Observe how large these files are compared to those from the previous section
 get.filesize(in_ebd) 
@@ -414,8 +414,8 @@ filters
 We filter the eBird and sampling data, save it and upload these new (filtered) data files.
 
 ```{r Apply filters new dataset}
-f_ebd <- "data/ebd_filtered_amewoo_presabs.txt"
-f_effort <- "data/effort_filtered_amewoo_presabs.txt"
+f_ebd <- "../data/eBird/ebd_filtered_amewoo_presabs.txt"
+f_effort <- "../data/eBird/effort_filtered_amewoo_presabs.txt"
 
 ## Call AWK to execute filters
 f_ebd_effort <- auk_filter(filters,
@@ -577,10 +577,10 @@ zf_sf <- zf |>
   st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
 
 # Load GIS and shapefile data
-ee_landcover <- read.csv("data/gis/EarthEnv-landcover-northeast.csv") |>
+ee_landcover <- read.csv("../data/gis/EarthEnv-landcover-northeast.csv") |>
   left_join(landcover_palette) # Add map colors for nice plotting
 
-ne_states_sf <- read_sf("data/gis/usa-northeast-states.shp") |>
+ne_states_sf <- read_sf("../data/gis/usa-northeast-states.shp") |>
   st_transform(crs = 4326)
 ```
 

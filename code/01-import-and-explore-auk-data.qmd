@@ -55,7 +55,7 @@ Create paths for the *ebd* and *sampling* files provided by the instructors. Whe
 
 ```{r Set auk paths}
 # Set path for EBD or eBird basic dataset:
-in_ebd_small <- "data/ebd_filtered_cam_AOS_2026.txt"
+in_ebd_small <- "../data/eBird/ebd_filtered_cam_AOS_2026.txt"
 
 # Set path for effort data:
 in_effort_small <- 

@@ -13,13 +13,13 @@ rm(list = ls())
 #------------------------------------------------------------------------------#
 library(tidyverse)
 library(auk)
-source("custom-functions.R")
+source("code/custom-functions.R")
 set_theme(custom.theme())
 
 # Section 1: Load EBD (eBird Basic Dataset) and effort (sampling) files
 ## Set paths for EBD & effort data
-in_ebd_small <- "./data/ebd_filtered_cam_AOS_2026.txt"
-in_effort_small <- "./data/effort_filtered_cam_AOS_2026.txt"
+in_ebd_small <- "./data/eBird/ebd_filtered_cam_AOS_2026.txt"
+in_effort_small <- "./data/eBird/effort_filtered_cam_AOS_2026.txt"
 
 ## Smallish files, so we can load into R memory directly
 get.filesize(in_ebd_small)
@@ -110,10 +110,10 @@ duration_max_pipe
 #------------------------------------------------------------------------------#
 library(tidyverse)
 library(auk)
-source("custom-functions.R")
+source("code/custom-functions.R")
 
 # Section 1:  Set paths for raw EBD & effort data in
-in_ebd <- "data/ebd_filtered_cam_AOS_2026.txt"
+in_ebd <- "data/eBird/ebd_filtered_cam_AOS_2026.txt"
 
 ## Observe how large these files are compared to those from the previous section
 get.filesize(in_ebd) 
@@ -164,7 +164,7 @@ filters3
 # Section 3: Apply filters to EBD object
 ## Call AWK to execute filters; time depends on the size of your file 
 presence_out <- auk_filter(filters3,
-                           file = "data/ebd_filtered_cregua_presence.txt",
+                           file = "data/eBird/ebd_filtered_cregua_presence.txt",
                            overwrite = TRUE) |>
   # Read filtered data into R environment
   read_ebd()
@@ -179,12 +179,12 @@ library(auk)
 library(lubridate)
 library(cowplot)
 library(sf)
-source("custom-functions.R")
+source("code/custom-functions.R")
 set_theme(custom.theme())
 
 # Section 1:  Set paths for raw EBD & effort data in
-in_ebd <- "data/ebd_filtered_us_AOS_2026.txt"
-in_effort <- "data/effort_filtered_us_AOS_2026.txt"
+in_ebd <- "data/eBird/ebd_filtered_us_AOS_2026.txt"
+in_effort <- "data/eBird/effort_filtered_us_AOS_2026.txt"
 
 ## Observe how large these files are compared to those from the previous section
 get.filesize(in_ebd) 
@@ -214,8 +214,8 @@ filters
 # Apply filters to EBD & effort objects
 
 ## Note: We can also define output file names outside of pipeline
-f_ebd <- "data/ebd_filtered_amewoo_presabs.txt"
-f_effort <- "data/effort_filtered_amewoo_presabs.txt"
+f_ebd <- "data/eBird/ebd_filtered_amewoo_presabs.txt"
+f_effort <- "data/eBird/effort_filtered_amewoo_presabs.txt"
 
 ## Call AWK to execute filters
 f_ebd_effort <- auk_filter(filters,
