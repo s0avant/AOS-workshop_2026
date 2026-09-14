@@ -14,11 +14,11 @@
 
 *To cite this GitHub repo:*
 
-> ###### Van Tatenhove, Aimee M., Rodríguez Vásquez, F.G., (2026). *Setting Your Analyses Up For Success With eBird Data: Preparing Raw Data With ‘Auk’ in R.* <https://github.com/s0avant/AOS-workshop_2026>
+> ###### Van Tatenhove, A.M., Rodríguez Vásquez, F.G. (2026). *Setting Your Analyses Up For Success With eBird Data: Preparing Raw Data With ‘Auk’ in R.* <https://github.com/s0avant/AOS-workshop_2026>
 
 *To cite the auk package:*
 
-> ###### Strimas-Mackey M, Miller E, Hochachka W (2026). *auk: eBird Data Extraction and Processing in R*. R package version 0.9.2, <https://cornelllabofornithology.github.io/auk/>.
+> ###### Strimas-Mackey, M., Miller, E., Hochachka, W. (2026). *auk: eBird Data Extraction and Processing in R*. R package version 0.9.2, <https://cornelllabofornithology.github.io/auk/>.
 
 **Further reading and resources:**
 
