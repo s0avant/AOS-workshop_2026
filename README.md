@@ -72,7 +72,7 @@
 - **AOS-workshop_2026.Rproj**
   - Rproj file created by RStudio for easy management of working directories. Double-click to open this project in RStudio.
 
-##### ./code/
+##### ./code
 
 - **00_full_workshop.qmd**
   - Reference (completed) Quarto document containing explanatory text and R code for all workshop demonstrations and exercises
@@ -93,14 +93,14 @@
 - **custom-functions.R**
   - R script containing custom functions and ggplot themes
 
-##### ./data/
+##### ./data
 
 - **eBird.zip**
   - Compressed data folder containing eBird Basic Database files. Unzip before beginning workshop.
 - **gis.zip**
   - Compressed data folder containing geospatial data files. Unzip before beginning workshop.
 
-##### ./reference-materials/
+##### ./reference-materials
 
 - **00_full_workshop_original.pdf**
   - Rendered PDF document of full workshop code and exercises presented at the AOS 2026 conference.
