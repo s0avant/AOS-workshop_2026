@@ -2,9 +2,9 @@
 
 #### Public repository of materials for *Setting Your Analyses Up For Success With eBird Data: Preparing Raw Data With ‘Auk’ in R*, presented at the 2026 [American Ornithological Society](https://americanornithology.org/) annual meeting in Amherst, Massachusetts, USA.
 
-*Updated September 14, 2026*
+*Updated September 15, 2026*
 
-**Instructors:** [Aimee M. Van Tatenhove](https://www.avantatenhove.com), Cornell Lab of Ornithology; [Fabiola Rodríguez Vásquez](https://cals.cornell.edu/people/fabiola-rodriguez-vasquez), Cornell University
+**Instructors:** [Aimee M. Van Tatenhove](https://www.avantatenhove.com) ([ORCID](https://orcid.org/0000-0003-2483-1055)), Cornell Lab of Ornithology; [Fabiola Rodríguez Vásquez](https://www.researchgate.net/profile/Fabiola-Rodriguez-Vasquez) ([ORCID](https://orcid.org/0000-0003-0423-2215)), Cornell University
 
 **Target audience:** Researchers with interest in using [eBird data](https://ebird.org/home) for research and visualization, but who have no to minimal prior experience using eBird data or the [auk R package](https://cornelllabofornithology.github.io/auk/). This workshop is fitting for a broad audience, from graduate students to research associates. Participants must feel comfortable working with [programming language R](https://www.r-project.org/) syntax and know how to navigate a package’s help files, and understand how these explain arguments. Familiarity or working knowledge of the [tidyverse packages](https://tidyverse.org/) is recommended.
 
@@ -153,8 +153,8 @@
 ### Cited works
 
 - eBird Basic Dataset. (2026). Version: EBD_relJul-2026. Cornell Lab of Ornithology, Ithaca, New York.
-- Runfola, D. et al. (2020) geoBoundaries: A global database of political administrative boundaries. PLoS ONE 15(4): e0231866. https://doi.org/10.1371/journal.pone.0231866
-- Strimas-Mackey, M., Hochachka, W.M., Ruiz-Gutierrez, V., Robinson, O.J., Miller,  E.T., Auer, T., Kelling,  S., Fink, D., Johnston, A. (2023). Best Practices for Using eBird Data. Version 2.0. https://ebird.github.io/ebird-best-practices/. Cornell Lab of Ornithology, Ithaca, New York. https://doi.org/10.5281/zenodo.3620739
+- Runfola, D. et al. (2020) geoBoundaries: A global database of political administrative boundaries. PLoS ONE 15(4): e0231866. <https://doi.org/10.1371/journal.pone.0231866>
+- Strimas-Mackey, M., Hochachka, W.M., Ruiz-Gutierrez, V., Robinson, O.J., Miller, E.T., Auer, T., Kelling, S., Fink, D., Johnston, A. (2023). Best Practices for Using eBird Data. Version 2.0. <https://ebird.github.io/ebird-best-practices/>. Cornell Lab of Ornithology, Ithaca, New York. <https://doi.org/10.5281/zenodo.3620739>
 - Strimas-Mackey, M., Miller, E., Hochachka, W. (2026). auk: eBird Data Extraction and Processing in R. R package version 0.9.2, <https://cornelllabofornithology.github.io/auk/>.
 - Tuanmu, M.-N. and Jetz, W. (2014). A global 1-km consensus land-cover product for biodiversity and ecosystem modeling. Global Ecology and Biogeography 23(9): 1031-1045.
 - Wickham, H., Averick, M., Bryan, J., Chang, W., McGowan, L.D., François, R., Grolemund, G., Hayes, A., Henry, L., Hester, J., Kuhn, M., Pedersen, T.L., Miller, E., Bache, S.M., Müller, K., Ooms, J., Robinson, D., Seidel, D.P., Spinu, V., Takahashi, K., Vaughan, D., Wilke, C., Woo, K., Yutani, H. (2019). “Welcome to the tidyverse.” *Journal of Open Source Software*, *4*(43), 1686. <doi:10.21105/joss.01686> <https://doi.org/10.21105/joss.01686>.
